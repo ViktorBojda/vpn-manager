@@ -1,19 +1,11 @@
 import json
 from django.shortcuts import render
-from requests import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.serializers import (
-    Serializer,
-    BooleanField,
-    CharField,
-    EmailField,
-    FloatField,
-    IntegerField,
-)
+from rest_framework.serializers import Serializer, CharField
 from rest_framework.views import APIView
 
-from .pritunl_request import auth_request
+from pritunl_api.pritunl_request import auth_request
 
 
 class OrganizationCreateApi(APIView):
@@ -22,7 +14,7 @@ class OrganizationCreateApi(APIView):
     """
 
     class InputSerializer(Serializer):
-        name = CharField(required=True)
+        name = CharField()
 
     def post(self, request) -> Response:
         serializer = self.InputSerializer(data=request.data)
@@ -71,7 +63,7 @@ class OrganizationUpdateApi(APIView):
     """
 
     class InputSerializer(Serializer):
-        name = CharField(required=True)
+        name = CharField()
 
     def put(self, request, org_id) -> Response:
         serializer = self.InputSerializer(data=request.data)
@@ -81,8 +73,8 @@ class OrganizationUpdateApi(APIView):
             method="GET", path=f"/organization/{org_id}", raise_err=True
         )
 
-        update_dict = org_detail.json()
-        update_dict.update(serializer.data)
+        updated_dict = org_detail.json()
+        updated_dict.update(serializer.data)
 
         response = auth_request(
             method="PUT",
@@ -90,7 +82,7 @@ class OrganizationUpdateApi(APIView):
             headers={
                 "Content-Type": "application/json",
             },
-            data=json.dumps(update_dict),
+            data=json.dumps(updated_dict),
             raise_err=True,
         )
 

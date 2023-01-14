@@ -1,29 +1,57 @@
-from django.urls import path
+from django.urls import include, path
 
-from . import views
+from pritunl_api import views
 
-urlpatterns = [
+
+user_patterns = [
+    path("", views.UserListApi.as_view(), name="users-list"),
     path(
-        "organizations/", views.OrganizationListApi.as_view(), name="organizations-list"
+        "create/",
+        views.UserCreateApi.as_view(),
+        name="users-create",
     ),
     path(
-        "organizations/create/",
+        "<str:user_id>/",
+        views.UserDetailApi.as_view(),
+        name="users-detail",
+    ),
+    path(
+        "<str:user_id>/update/",
+        views.UserUpdateApi.as_view(),
+        name="users-update",
+    ),
+    path(
+        "<str:user_id>/delete/",
+        views.UserDeleteApi.as_view(),
+        name="users-delete",
+    ),
+]
+
+organization_patterns = [
+    path("", views.OrganizationListApi.as_view(), name="organizations-list"),
+    path(
+        "create/",
         views.OrganizationCreateApi.as_view(),
         name="organizations-create",
     ),
     path(
-        "organizations/<str:org_id>/",
+        "<str:org_id>/",
         views.OrganizationDetailApi.as_view(),
         name="organizations-detail",
     ),
     path(
-        "organizations/<str:org_id>/update/",
+        "<str:org_id>/update/",
         views.OrganizationUpdateApi.as_view(),
         name="organizations-update",
     ),
     path(
-        "organizations/<str:org_id>/delete/",
+        "<str:org_id>/delete/",
         views.OrganizationDeleteApi.as_view(),
         name="organizations-delete",
     ),
+    path("<str:org_id>/users/", include((user_patterns, "users"))),
+]
+
+urlpatterns = [
+    path("organizations/", include((organization_patterns, "organizations"))),
 ]

@@ -7,7 +7,9 @@ API_TOKEN = settings.API_TOKEN
 API_SECRET = settings.API_SECRET
 
 
-def auth_request(method, path, headers=None, data=None, raise_err=False) -> requests.Response:
+def auth_request(
+    method, path, headers=None, data=None, raise_err=False
+) -> requests.Response:
     auth_timestamp = str(int(time.time()))
     auth_nonce = uuid.uuid4().hex
     auth_string = "&".join(
