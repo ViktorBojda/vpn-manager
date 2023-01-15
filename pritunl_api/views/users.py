@@ -1,11 +1,11 @@
-import json
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from pritunl_api.pritunl_request import auth_request
+from pritunl_api.selectors.users import get_all_users, get_user_by_id
 from pritunl_api.serializers import UserSerializer
+from pritunl_api.services.users import create_user, delete_user, update_user
 
 
 class UserCreateApi(APIView):
@@ -23,17 +23,9 @@ class UserCreateApi(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        response = auth_request(
-            method="POST",
-            path=f"/user/{org_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            data=json.dumps(serializer.data),
-            raise_err=True,
-        )
+        data = create_user(org_id=org_id, **serializer.data)
 
-        return Response(data=response.json(), status=status.HTTP_201_CREATED)
+        return Response(data, status.HTTP_201_CREATED)
 
 
 class UserListApi(APIView):
@@ -42,9 +34,9 @@ class UserListApi(APIView):
     """
 
     def get(self, request, org_id) -> Response:
-        response = auth_request(method="GET", path=f"/user/{org_id}", raise_err=True)
+        data = get_all_users(org_id)
 
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class UserDetailApi(APIView):
@@ -53,11 +45,9 @@ class UserDetailApi(APIView):
     """
 
     def get(self, request, org_id, user_id) -> Response:
-        response = auth_request(
-            method="GET", path=f"/user/{org_id}/{user_id}", raise_err=True
-        )
+        data = get_user_by_id(user_id=user_id, org_id=org_id)
 
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class UserUpdateApi(APIView):
@@ -71,24 +61,9 @@ class UserUpdateApi(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_detail = auth_request(
-            method="GET", path=f"/user/{org_id}/{user_id}", raise_err=True
-        )
+        data = update_user(user_id=user_id, org_id=org_id, **serializer.data)
 
-        updated_dict = user_detail.json()
-        updated_dict.update(serializer.data)
-
-        response = auth_request(
-            method="PUT",
-            path=f"/user/{org_id}/{user_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            data=json.dumps(updated_dict),
-            raise_err=True,
-        )
-
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class UserDeleteApi(APIView):
@@ -97,6 +72,6 @@ class UserDeleteApi(APIView):
     """
 
     def delete(self, request, org_id, user_id) -> Response:
-        auth_request(method="DELETE", path=f"/user/{org_id}/{user_id}", raise_err=True)
+        delete_user(user_id=user_id, org_id=org_id)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

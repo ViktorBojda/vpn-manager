@@ -77,6 +77,7 @@ server_patterns = [
     path("<str:org_id>/users/", include((user_patterns, "users"))),
 ]
 
+app_name = "pritunl_api"
 urlpatterns = [
     path("organizations/", include((organization_patterns, "organizations"))),
     path("servers/", include((server_patterns, "servers"))),

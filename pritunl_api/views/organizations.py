@@ -1,11 +1,11 @@
-import json
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer, CharField
 from rest_framework.views import APIView
 
-from pritunl_api.pritunl_request import auth_request
+from pritunl_api.selectors.organizations import get_all_organizations, get_organization_by_id
+from pritunl_api.services.organizations import create_organization, delete_organization, update_organization
 
 
 class OrganizationCreateApi(APIView):
@@ -20,17 +20,9 @@ class OrganizationCreateApi(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        response = auth_request(
-            method="POST",
-            path="/organization",
-            headers={
-                "Content-Type": "application/json",
-            },
-            data=json.dumps(serializer.data),
-            raise_err=True,
-        )
+        data = create_organization(**serializer.data)
 
-        return Response(data=response.json(), status=status.HTTP_201_CREATED)
+        return Response(data, status.HTTP_201_CREATED)
 
 
 class OrganizationListApi(APIView):
@@ -39,9 +31,9 @@ class OrganizationListApi(APIView):
     """
 
     def get(self, request) -> Response:
-        response = auth_request(method="GET", path="/organization", raise_err=True)
+        data = get_all_organizations()
 
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class OrganizationDetailApi(APIView):
@@ -50,11 +42,9 @@ class OrganizationDetailApi(APIView):
     """
 
     def get(self, request, org_id) -> Response:
-        response = auth_request(
-            method="GET", path=f"/organization/{org_id}", raise_err=True
-        )
+        data = get_organization_by_id(org_id)
 
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class OrganizationUpdateApi(APIView):
@@ -69,24 +59,9 @@ class OrganizationUpdateApi(APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        org_detail = auth_request(
-            method="GET", path=f"/organization/{org_id}", raise_err=True
-        )
+        data = update_organization(org_id=org_id, **serializer.data)
 
-        updated_dict = org_detail.json()
-        updated_dict.update(serializer.data)
-
-        response = auth_request(
-            method="PUT",
-            path=f"/organization/{org_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            data=json.dumps(updated_dict),
-            raise_err=True,
-        )
-
-        return Response(data=response.json(), status=status.HTTP_200_OK)
+        return Response(data, status.HTTP_200_OK)
 
 
 class OrganizationDeleteApi(APIView):
@@ -95,6 +70,6 @@ class OrganizationDeleteApi(APIView):
     """
 
     def delete(self, request, org_id) -> Response:
-        auth_request(method="DELETE", path=f"/organization/{org_id}", raise_err=True)
+        delete_organization(org_id)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status.HTTP_204_NO_CONTENT)
