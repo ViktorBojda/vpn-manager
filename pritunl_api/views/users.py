@@ -1,14 +1,7 @@
 import json
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.serializers import (
-    Serializer,
-    CharField,
-    EmailField,
-    ListField,
-)
 from rest_framework.views import APIView
 
 from pritunl_api.pritunl_request import auth_request

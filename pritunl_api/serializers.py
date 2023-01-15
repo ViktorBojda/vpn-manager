@@ -1,7 +1,6 @@
 from rest_framework.serializers import (
     Serializer,
     CharField,
-    IntegerField,
     EmailField,
     ListField,
 )
