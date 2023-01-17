@@ -1,3 +1,4 @@
+from .views import *
 from .organizations import *
 from .users import *
 from .system import *

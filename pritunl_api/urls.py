@@ -77,11 +77,16 @@ server_patterns = [
     path("<str:org_id>/users/", include((user_patterns, "users"))),
 ]
 
-app_name = "pritunl_api"
-urlpatterns = [
+api_patterns = [
     path("organizations/", include((organization_patterns, "organizations"))),
     path("servers/", include((server_patterns, "servers"))),
     path("status/", views.SystemStatusApi.as_view(), name="system-status"),
     path("server-logs/", views.ServerLogsApi.as_view(), name="server-logs"),
     path("system-logs/", views.SystemLogsApi.as_view(), name="system-logs"),
+]
+
+app_name = "pritunl_api"
+urlpatterns = [
+    path("users/", views.UserOrganizationView.as_view(), name="users-organizations-view"),
+    path("api/", include((api_patterns, "api"))),
 ]

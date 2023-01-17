@@ -37,6 +37,7 @@ class UserListApi(APIView):
         data = get_all_users(org_id)
 
         return Response(data, status.HTTP_200_OK)
+        # return render(request, "pritunl_api/test.html", {"data": data})
 
 
 class UserDetailApi(APIView):
