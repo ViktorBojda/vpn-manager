@@ -1,25 +1,72 @@
-let urlBase = "/pritunl/api/";
+const urlBase = "/pritunl/api/";
+const orgTemplate = (id, name) =>
+    `<div id=org-${id} class='card my-3 org-wrapper'>
+        <div class='card-header org-header'>
+            <input class="form-check-input org-check" type="checkbox" name="del-check" value="${id}" aria-label="Select checkbox">
+            <span class="org-name">${name}</span>
+        </div>
+        <ul class='list-group list-group-flush user-list'>
+    </div>`;
+const userTemplate = (id, name, org_id) => 
+    `<li id="user-${id}" class="list-group-item user-item">
+        <input class="form-check-input user-check" type="checkbox" name="del-check" value="${id},${org_id}" aria-label="Select checkbox">
+        <span class="user-name">${name}</span>
+    </li>`;
 let orgData = [];
 let userData = {};
 
+
+$("#btn-del-select").on("click", function () {
+    let orgs = $(".org-check:checked");
+    let users = $(".user-check:checked:not(:disabled)");
+
+    let itemList = $("<ul></ul>");
+    if (orgs.length) {
+        orgs.each(function(){
+            itemList.append($("<li>" + $(this).siblings(".org-name").text() + "</li>"));
+        });
+    }
+    if (users.length) {
+        users.each(function(){
+            itemList.append($("<li>" + $(this).siblings(".user-name").text() + "</li>"));
+        });
+    }
+
+    $("#modal-header").text("Delete Selected");
+    $("#modal-body").html(
+        `<h2 class="fs-6">Are you sure you want to delete the following items?</h2>
+        ${itemList.prop("outerHTML")}`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
+    )
+
+    $("#modal-btn-del").off().on("click", function() {
+        
+    });
+
+    $("#modal").modal("show");
+});
+
 function sortOrgs() {
-    let orgs = $("#org-container .card").get();
+    let orgs = $("#org-container .org-wrapper").get();
     if (!orgs.length) {
         console.error("Failed to sort, no organizations found.");
         return;
     }
 
     orgs.sort(function (org1, org2) {
-        return $(org1).children(".card-header").text().trim().localeCompare($(org2).children(".card-header").text().trim())
+        return $(org1).children(".org-header").text().trim().localeCompare($(org2).children(".org-header").text().trim())
     })
 
     $("#org-container").append(orgs);
 }
 
 function sortUserList(orgID) {
-    let users = $("#org-" + orgID + " .list-group-item").get();
+    let users = $(`#org-${orgID} .user-item`).get();
     if (!users.length) {
-        console.error("Failed to sort, no users found under organization with ID (" + orgID + ").");
+        console.error(`Failed to sort, no users found under organization with ID (${orgID}).`);
         return;
     }
 
@@ -27,7 +74,7 @@ function sortUserList(orgID) {
         return $(user1).text().trim().localeCompare($(user2).text().trim())
     })
 
-    $("#org-" + orgID + " .list-group").append(users);
+    $(`#org-${orgID} .user-list`).append(users);
 }
 
 function submitAddOrg() {
@@ -48,12 +95,7 @@ function submitAddOrg() {
     }).done(function (response) {
         $("#modal").modal("hide");
         $.when(reloadOrgs()).then(function () {
-            $("#org-container").append($(
-                `<div id=org-${response.id} class='card my-3'>
-                    <div class='card-header'>${response.name}</div>
-                    <ul class='list-group list-group-flush'>
-                </div>`
-            ))
+            $("#org-container").append($(orgTemplate(response.id, response.name)));
             sortOrgs();
         });
     }).fail(function (xhr) {
@@ -63,14 +105,20 @@ function submitAddOrg() {
 
 $("#btn-add-org").on("click", function () {
     $("#modal-header").text("Add Group");
-    $("#form").html(
-        `<div class="mb-3">
-            <label for="form-input-name" class="form-label">Name</label>
-            <input type="text" class="form-control" id="form-input-name" name="name" required>
-        </div>`
+    $("#modal-body").html(
+        `<form id="form">
+            <div class="mb-3">
+                <label for="form-input-name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="form-input-name" name="name" required>
+            </div>
+        </form>`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" form="form" class="btn btn-primary">Submit</button>`
     )
 
-    $("form").off().on("submit", function (event) {
+    $("#form").off().on("submit", function (event) {
         event.preventDefault();
         submitAddOrg();
     });
@@ -99,8 +147,9 @@ function submitAddUser() {
     }).done(function (response) {
         $("#modal").modal("hide");
         $.when(reloadUsersByOrgID(orgID)).then(function () {
-            // rebuildUserListByOrgID(orgID);
-            $("#org-" + orgID + " ul").append($("<li class='list-group-item'>" + response[0].name + "</li>"));
+            $("#org-" + orgID + " .user-list").append(
+                $(userTemplate(response[0].id, response[0].name, response[0].organization))
+            );
             sortUserList(orgID);
         });
     }).fail(function (xhr) {
@@ -124,26 +173,32 @@ $("#btn-add-user").on("click", function () {
     });
 
     $("#modal-header").text("Add User");
-    $("#form").html(
-        `<div class="mb-3">
-            <label for="form-input-name" class="form-label">Name</label>
-            <input type="text" class="form-control" id="form-input-name" name="name" required>
-        </div>
-        <div class="mb-3">
-            <label for="form-input-org" class="form-label">Organization</label>
-            ${orgSelect.prop("outerHTML")}
-        </div>
-        <div class="mb-3">
-            <label for="form-input-group" class="form-label">Groups</label>
-            <input type="text" class="form-control" id="form-input-group" name="groups">
-        </div>
-        <div class="mb-3">
-            <label for="form-input-email" class="form-label">Email address</label>
-            <input type="email" class="form-control" id="form-input-email" name="email">
-        </div>`
+    $("#modal-body").html(
+        `<form id="form">
+            <div class="mb-3">
+                <label for="form-input-name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="form-input-name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="form-input-org" class="form-label">Organization</label>
+                ${orgSelect.prop("outerHTML")}
+            </div>
+            <div class="mb-3">
+                <label for="form-input-group" class="form-label">Groups</label>
+                <input type="text" class="form-control" id="form-input-group" name="groups">
+            </div>
+            <div class="mb-3">
+                <label for="form-input-email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="form-input-email" name="email">
+            </div>
+        </form>`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" form="form" class="btn btn-primary">Submit</button>`
     )
 
-    $("form").off().on("submit", function (event) {
+    $("#form").off().on("submit", function (event) {
         event.preventDefault();
         submitAddUser();
     });
@@ -180,16 +235,13 @@ function rebuildOrgContainer() {
     orgContainer.empty();
 
     orgData.forEach(org => {
-        let card = $("<div id=org-" + org.id + " class='card my-3'></div>");
+        let card = $(orgTemplate(org.id, org.name));
         orgContainer.append(card);
 
-        card.append($("<div class='card-header'>" + org.name + "</div>"));
-        let userList = $("<ul class='list-group list-group-flush'>");
-        card.append(userList);
-
         if (org.id in userData) {
+            let userList = card.children(".user-list");
             userData[org.id].forEach(user => {
-                userList.append($("<li class='list-group-item'>" + user.name + "</li>"));
+                userList.append($(userTemplate(user.id, user.name, user.organization)));
             });
         }
     });
@@ -233,6 +285,17 @@ function reloadAllData() {
     })
 }
 
-$(window).on('load', function () {
+$(document).on("change", ".org-check", function() {
+    $(this).parent().siblings(".user-list").find(".user-check").prop({
+        "disabled": $(this).is(":checked"),
+        "checked": $(this).is(":checked")
+    });
+});
+
+$(document).on("change", "input[name='del-check']", function() {
+    $("#btn-del-select").prop('disabled', !$("input[name='del-check']:checked").length);
+});
+
+$(function() {
     reloadAllData();
 });

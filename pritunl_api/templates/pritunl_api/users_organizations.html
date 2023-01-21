@@ -11,6 +11,9 @@
     <div class="col-3">
         <button type="button" id="btn-add-user" class="btn btn-primary w-100">Add User</button>
     </div>
+    <div class="col-3">
+        <button type="button" id="btn-del-select" class="btn btn-primary w-100" disabled>Delete Selected</button>
+    </div>
 </div>
 
 <div id="org-container"></div>
@@ -22,13 +25,8 @@
                 <h1 class="modal-title fs-5" id="modal-header"></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="modal-body">
-                <form id="form"></form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="form" class="btn btn-primary">Submit</button>
-            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
         </div>
     </div>
 </div>
