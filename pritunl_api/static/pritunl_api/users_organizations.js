@@ -16,6 +16,46 @@ let orgData = [];
 let userData = {};
 
 
+function deleteSelectedUsers(users) {
+    let ajaxCalls = []
+    users.each(function() {
+        let IDs = $(this).val().split(",");
+        ajaxCalls.push(
+            $.ajax({
+                type: "DELETE",
+                url: urlBase + "organizations/" + IDs[1] + "/users/" + IDs[0] + "/delete/"
+            }).fail(function (xhr) {
+                alert(xhr.responseText);
+            })
+        );
+    });
+    return ajaxCalls;
+}
+
+function deleteSelectedOrgs(orgs) {
+    let ajaxCalls = []
+    orgs.each(function() {
+        ajaxCalls.push(
+            $.ajax({
+                type: "DELETE",
+                url: urlBase + "organizations/" + $(this).val() + "/delete/"
+            }).fail(function (xhr) {
+                alert(xhr.responseText);
+            })
+        );
+    })
+    return ajaxCalls;
+}
+
+function deleteAllSelected(orgs, users) {
+    let ajaxCalls = [];
+    if (orgs.length)
+        ajaxCalls = ajaxCalls.concat(deleteSelectedOrgs(orgs));
+    if (users.length)
+        ajaxCalls = ajaxCalls.concat(deleteSelectedUsers(users));
+    return ajaxCalls;
+}
+
 $("#btn-del-select").on("click", function () {
     let orgs = $(".org-check:checked");
     let users = $(".user-check:checked:not(:disabled)");
@@ -43,7 +83,10 @@ $("#btn-del-select").on("click", function () {
     )
 
     $("#modal-btn-del").off().on("click", function() {
-        
+        $.when.apply($, deleteAllSelected(orgs, users)).then(function() {
+            reloadAllData();
+            $("#modal").modal("hide");
+        });
     });
 
     $("#modal").modal("show");
@@ -256,6 +299,8 @@ function reloadUsersByOrgID(orgID) {
             delete userData[orgID];
         else
             userData[orgID] = data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
     });
 }
 
@@ -273,6 +318,8 @@ function reloadOrgs() {
         url: urlBase + "organizations/"
     }).done(function (data) {
         orgData = data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
     });
 }
 
