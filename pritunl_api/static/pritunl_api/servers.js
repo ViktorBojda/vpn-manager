@@ -23,6 +23,158 @@ let routeData = {};
 let orgData = {};
 
 
+function submitAttachOrg() {
+    let formData = $("form").serializeArray();
+    let data = {};
+
+    formData.forEach(function (item, idx, object) {
+        if (item.value.trim().length === 0)
+            object.splice(idx, 1);
+        else
+            data[item.name] = item.value;
+    });
+    let serverID = data.server;
+    let orgID = data.organization;
+
+    $.ajax({
+        method: "PUT",
+        url: `${urlBase}servers/${serverID}/organizations/${orgID}/attach/`
+    }).done(function (response) {
+        $("#modal").modal("hide");
+        $.when(fetchOrgsByServerID(serverID)).then(function () {
+            rebuildServerOrgsByID(serverID);
+        });
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    })
+}
+
+$("#btn-attach-org").on("click", function () {
+    if (!serverData.length) {
+        console.error("No servers found, you must add server before you can attach organization!");
+        return;
+    }
+    $.when(fetchOrgs()).then(function(orgs) {
+        if (!orgs.length) {
+            console.error("No organizations found, you must add organization before you can attach it to server!");
+            return;
+        }
+
+        let serverSelect = $(
+            `<select id='form-input-server' name='server' class='form-select' required>
+                <option value="" selected disabled>Select server</option>
+            </select>`
+        );
+    
+        $.each(serverData, function (key, val) {
+            serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
+        });
+
+        let orgSelect = $(
+            `<select id='form-input-org' name='organization' class='form-select' required>
+                <option value="" selected disabled>Select organization</option>
+            </select>`
+        );
+    
+        $.each(orgs, function (key, val) {
+            orgSelect.append($(`<option value=${val.id}>${val.name}</option>`));
+        });
+    
+        $("#modal-header").text("Attach Organization");
+        $("#modal-body").html(
+            `<form id="form">
+                <div class="mb-3">
+                    <label for="form-input-server" class="form-label">Server</label>
+                    ${serverSelect.prop("outerHTML")}
+                </div>
+                <div class="mb-3">
+                    <label for="form-input-org" class="form-label">Organization</label>
+                    ${orgSelect.prop("outerHTML")}
+                </div>
+            </form>`
+        )
+        $("#modal-footer").html(
+            `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" form="form" class="btn btn-primary">Attach</button>`
+        )
+    
+        $("#form").off().on("submit", function (event) {
+            event.preventDefault();
+            submitAttachOrg();
+        });
+    
+        $("#modal").modal("show");
+    })
+});
+
+function submitAddRoute() {
+    let formData = $("form").serializeArray();
+    let route = {};
+
+    formData.forEach(function (item, idx, object) {
+        if (item.value.trim().length === 0)
+            object.splice(idx, 1);
+        else
+            route[item.name] = item.value;
+    });
+    let serverID = route.server;
+    delete route.server;
+
+    $.ajax({
+        method: "POST",
+        url: `${urlBase}servers/${serverID}/routes/create/`,
+        data: route
+    }).done(function (response) {
+        $("#modal").modal("hide");
+        $.when(fetchRoutesByServerID(response.server)).then(function () {
+            rebuildServerRoutesByID(response.server);
+        });
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    })
+}
+
+$("#btn-add-route").on("click", function () {
+    if (!serverData.length) {
+        console.error("No servers found, you must add server before you can add route!");
+        return;
+    }
+    let serverSelect = $(
+        `<select id='form-input-server' name='server' class='form-select' required>
+            <option value="" selected disabled>Select server</option>
+        </select>`
+    );
+
+    $.each(serverData, function (key, val) {
+        serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
+    });
+
+    $("#modal-header").text("Add Route");
+    $("#modal-body").html(
+        `<form id="form">
+            <div class="mb-3">
+                <label for="form-input-network" class="form-label">Network</label>
+                <input type="text" class="form-control" id="form-input-network" name="network" required>
+            </div>
+            <div class="mb-3">
+                <label for="form-input-server" class="form-label">Server</label>
+                ${serverSelect.prop("outerHTML")}
+            </div>
+        </form>`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" form="form" class="btn btn-primary">Add</button>`
+    )
+
+    $("#form").off().on("submit", function (event) {
+        event.preventDefault();
+        submitAddRoute();
+    });
+
+    $("#modal").modal("show");
+});
+
 function sortServers() {
     let servers = $("#server-container .server-wrapper").get();
     if (!servers.length) {
@@ -45,16 +197,16 @@ function submitAddServer() {
         if (item.value.trim().length === 0)
             object.splice(idx, 1);
         else
-            server[item.name] = Number(item.value) ? Number(item.value) : item.value;;
+            server[item.name] = Number(item.value) ? Number(item.value) : item.value;
     });
-    console.log(server);
+
     $.ajax({
         method: "POST",
         url: urlBase + "servers/create/",
         data: server
     }).done(function (response) {
         $("#modal").modal("hide");
-        $.when(reloadServers(), reloadRoutesByServerID(response.id)).then(function () {
+        $.when(fetchServers(), fetchRoutesByServerID(response.id)).then(function () {
             $("#server-container").append($(serverTemplate(response.id, response.name)));
             rebuildServerRoutesByID(response.id);
             sortServers();
@@ -140,6 +292,7 @@ $("#btn-add-server").on("click", function () {
 function rebuildServerOrgsByID(server_id) {
     if (server_id in orgData) {
         let orgList = $(`#server-${server_id} > .org-list`);
+        orgList.empty();
         orgData[server_id].forEach(org => {
             orgList.append($(orgTemplate(org.id, org.name, org.server)));
         });
@@ -149,6 +302,7 @@ function rebuildServerOrgsByID(server_id) {
 function rebuildServerRoutesByID(server_id) {
     if (server_id in routeData) {
         let routeList = $(`#server-${server_id} > .route-list`);
+        routeList.empty();
         routeData[server_id].forEach(route => {
             routeList.append($(routeTemplate(route.id, route.network, route.server)));
         });
@@ -168,7 +322,18 @@ function rebuildServerContainer() {
     });
 }
 
-function reloadOrgsByServerID(serverID) {
+function fetchOrgs() {
+    return $.ajax({
+        type: "GET",
+        url: urlBase + "organizations/"
+    }).done(function (data) {
+        return data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
+function fetchOrgsByServerID(serverID) {
     return $.ajax({
         type: "GET",
         url: `${urlBase}servers/${serverID}/organizations/`
@@ -182,7 +347,7 @@ function reloadOrgsByServerID(serverID) {
     });
 }
 
-function reloadRoutesByServerID(serverID) {
+function fetchRoutesByServerID(serverID) {
     return $.ajax({
         type: "GET",
         url: `${urlBase}servers/${serverID}/routes/`
@@ -196,16 +361,16 @@ function reloadRoutesByServerID(serverID) {
     });
 }
 
-function reloadRoutesAndOrgs() {
+function fetchRoutesAndOrgs() {
     ajaxCalls = [];
     serverData.forEach(server => {
-        ajaxCalls.push(reloadRoutesByServerID(server.id));
-        ajaxCalls.push(reloadOrgsByServerID(server.id));
+        ajaxCalls.push(fetchRoutesByServerID(server.id));
+        ajaxCalls.push(fetchOrgsByServerID(server.id));
     });
     return ajaxCalls;
 }
 
-function reloadServers() {
+function fetchServers() {
     return $.ajax({
         type: "GET",
         url: urlBase + "servers/"
@@ -216,16 +381,16 @@ function reloadServers() {
     });
 }
 
-function reloadAllData() {
-    $.when(reloadServers()).then(function () {
+function fetchAllData() {
+    $.when(fetchServers()).then(function () {
         orgData = {};
         routeData = {};
-        $.when.apply($, reloadRoutesAndOrgs()).then(function () {
+        $.when.apply($, fetchRoutesAndOrgs()).then(function () {
             rebuildServerContainer();
         });
     })
 }
 
 $(function() {
-    reloadAllData();
+    fetchAllData();
 });

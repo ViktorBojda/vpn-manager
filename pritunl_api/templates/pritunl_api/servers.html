@@ -8,29 +8,15 @@
     <div class="col-3">
         <button type="button" id="btn-add-server" class="btn btn-primary w-100">Add Server</button>
     </div>
-    <!-- <div class="col-3">
-        <button type="button" id="btn-add-user" class="btn btn-primary w-100">Add User</button>
+    <div class="col-3">
+        <button type="button" id="btn-add-route" class="btn btn-primary w-100">Add Route</button>
     </div>
     <div class="col-3">
-        <button type="button" id="btn-del-select" class="btn btn-danger w-100" disabled>Delete Selected</button>
-    </div> -->
+        <button type="button" id="btn-attach-org" class="btn btn-primary w-100">Attach Organization</button>
+    </div>
 </div>
 
 <div id="server-container"></div>
-
-<div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal-header" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="modal-header"></h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modal-body"></div>
-            <div class="modal-footer" id="modal-footer"></div>
-        </div>
-    </div>
-</div>
-
 {% endblock content %}
 
 {% block js_scripts %}

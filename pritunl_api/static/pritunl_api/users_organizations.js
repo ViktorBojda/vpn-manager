@@ -84,7 +84,7 @@ $("#btn-del-select").on("click", function () {
 
     $("#modal-btn-del").off().on("click", function() {
         $.when.apply($, deleteAllSelected(orgs, users)).then(function() {
-            reloadAllData();
+            fetchAllData();
             $("#modal").modal("hide");
         });
     });
@@ -137,7 +137,7 @@ function submitAddOrg() {
         data: org
     }).done(function (response) {
         $("#modal").modal("hide");
-        $.when(reloadOrgs()).then(function () {
+        $.when(fetchOrgs()).then(function () {
             $("#org-container").append($(orgTemplate(response.id, response.name)));
             sortOrgs();
         });
@@ -158,7 +158,7 @@ $("#btn-add-org").on("click", function () {
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" class="btn btn-primary">Submit</button>`
+        <button type="submit" form="form" class="btn btn-primary">Add</button>`
     )
 
     $("#form").off().on("submit", function (event) {
@@ -171,7 +171,6 @@ $("#btn-add-org").on("click", function () {
 
 function submitAddUser() {
     let formData = $("form").serializeArray();
-    let orgID;
     let user = {};
 
     formData.forEach(function (item, idx, object) {
@@ -180,7 +179,7 @@ function submitAddUser() {
         else
             user[item.name] = item.value;
     });
-    orgID = user.organization;
+    let orgID = user.organization;
     delete user.organization;
 
     $.ajax({
@@ -189,7 +188,7 @@ function submitAddUser() {
         data: user
     }).done(function (response) {
         $("#modal").modal("hide");
-        $.when(reloadUsersByOrgID(orgID)).then(function () {
+        $.when(fetchUsersByOrgID(orgID)).then(function () {
             $("#org-" + orgID + " .user-list").append(
                 $(userTemplate(response[0].id, response[0].name, response[0].organization))
             );
@@ -238,7 +237,7 @@ $("#btn-add-user").on("click", function () {
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" class="btn btn-primary">Submit</button>`
+        <button type="submit" form="form" class="btn btn-primary">Add</button>`
     )
 
     $("#form").off().on("submit", function (event) {
@@ -248,30 +247,6 @@ $("#btn-add-user").on("click", function () {
 
     $("#modal").modal("show");
 });
-
-// function rebuildOrgByID(orgID) {
-//     let orgInfo = orgData.filter(obj => obj.id == orgID);
-//     if (!orgInfo.length) {
-//         console.error("There is no organization with given ID, failed to rebuild!");
-//         return;
-//     }
-//     let orgHeader = $("#org-" + orgID + " .card-header");
-//     if (orgHeader.length)
-//         orgHeader.text(orgInfo[0].name);
-//     else {
-
-//     }
-// }
-
-// function rebuildUserListByOrgID(orgID) {
-//     let userList = $("#org-" + orgID + " ul");
-//     userList.empty();
-//     if (orgID in userData) {
-//         userData[orgID].forEach(user => {
-//             userList.append($("<li class='list-group-item'>" + user.name + "</li>"));
-//         });
-//     }
-// }
 
 function rebuildOrgContainer() {
     let orgContainer = $("#org-container");
@@ -290,7 +265,7 @@ function rebuildOrgContainer() {
     });
 }
 
-function reloadUsersByOrgID(orgID) {
+function fetchUsersByOrgID(orgID) {
     return $.ajax({
         type: "GET",
         url: urlBase + "organizations/" + orgID + "/users/"
@@ -304,15 +279,15 @@ function reloadUsersByOrgID(orgID) {
     });
 }
 
-function reloadAllUsers() {
+function fetchAllUsers() {
     ajaxCalls = [];
     orgData.forEach(org => {
-        ajaxCalls.push(reloadUsersByOrgID(org.id));
+        ajaxCalls.push(fetchUsersByOrgID(org.id));
     });
     return ajaxCalls;
 }
 
-function reloadOrgs() {
+function fetchOrgs() {
     return $.ajax({
         type: "GET",
         url: urlBase + "organizations/"
@@ -323,10 +298,10 @@ function reloadOrgs() {
     });
 }
 
-function reloadAllData() {
-    $.when(reloadOrgs()).then(function () {
+function fetchAllData() {
+    $.when(fetchOrgs()).then(function () {
         userData = {};
-        $.when.apply($, reloadAllUsers()).then(function () {
+        $.when.apply($, fetchAllUsers()).then(function () {
             rebuildOrgContainer()
         });
     })
@@ -344,5 +319,5 @@ $(document).on("change", "input[name='del-check']", function() {
 });
 
 $(function() {
-    reloadAllData();
+    fetchAllData();
 });

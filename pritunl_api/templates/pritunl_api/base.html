@@ -32,6 +32,19 @@
 
     <div id="main-container" class="container-xxl">
         {% block content %}{% endblock content %}
+        
+        <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal-header" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modal-header"></h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal-body"></div>
+                    <div class="modal-footer" id="modal-footer"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.3.js"

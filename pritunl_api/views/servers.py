@@ -11,7 +11,7 @@ from rest_framework.serializers import (
 from pritunl_api.pritunl_request import auth_request
 from pritunl_api.selectors.servers import get_all_servers, get_server_by_id, get_server_orgs, get_server_output
 from pritunl_api.serializers import ServerSerializer
-from pritunl_api.services.servers import create_server, delete_server, update_server
+from pritunl_api.services.servers import attach_org_to_server, create_server, delete_server, update_server
 from pritunl_api.validators import validate_ipv4_network_address
 
 
@@ -115,6 +115,17 @@ class ServerOrganizationListApi(APIView):
 
     def get(self, request, server_id) -> Response:
         data = get_server_orgs(server_id)
+
+        return Response(data, status.HTTP_200_OK)
+
+
+class ServerAttachOrganizationApi(APIView):
+    """
+    Attaches organization to a server.
+    """
+
+    def put(self, request, server_id, org_id) -> Response:
+        data = attach_org_to_server(server_id=server_id, org_id=org_id)
 
         return Response(data, status.HTTP_200_OK)
 

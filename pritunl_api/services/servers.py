@@ -43,3 +43,18 @@ def update_server(
 
 def delete_server(server_id: str):
     auth_request(method="DELETE", path=f"/server/{server_id}", raise_err=True)
+
+
+def attach_org_to_server(*, server_id: str, org_id: str):
+    data = {"id": org_id, "server": server_id}
+    
+    response = auth_request(
+        method="PUT",
+        path=f"/server/{server_id}/organization/{org_id}",
+        headers={
+            "Content-Type": "application/json",
+        },
+        data=json.dumps(data),
+        raise_err=True,
+    )
+    return response.json()

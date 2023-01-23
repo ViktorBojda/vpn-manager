@@ -100,14 +100,19 @@ server_patterns = [
     ),
     path("<str:server_id>/routes/", include((route_patterns, "routes"))),
     path(
-        "<str:server_id>/output/",
-        views.ServerOutputApi.as_view(),
-        name="servers-output",
-    ),
-    path(
         "<str:server_id>/organizations/",
         views.ServerOrganizationListApi.as_view(),
         name="servers-organizations-list",
+    ),
+    path(
+        "<str:server_id>/organizations/<str:org_id>/attach/",
+        views.ServerAttachOrganizationApi.as_view(),
+        name="servers-organizations-attach",
+    ),
+    path(
+        "<str:server_id>/output/",
+        views.ServerOutputApi.as_view(),
+        name="servers-output",
     ),
 ]
 
