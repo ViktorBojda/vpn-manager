@@ -7,21 +7,15 @@ from pritunl_api.selectors.servers import get_server_by_id
 
 
 def create_server(
-    *,
-    name: str,
-    network: IPv4Address,
-    port: int,
-    protocol: str,
+    **kwargs
 ) -> Dict:
-    args = locals()
-
     response = auth_request(
         method="POST",
         path="/server",
         headers={
             "Content-Type": "application/json",
         },
-        data=json.dumps(args),
+        data=json.dumps(kwargs),
         raise_err=True,
     )
     return response.json()
