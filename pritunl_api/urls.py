@@ -52,6 +52,30 @@ organization_patterns = [
     path("<str:org_id>/users/", include((user_patterns, "users"))),
 ]
 
+route_patterns = [
+    path("", views.RouteListApi.as_view(), name="routes-list"),
+    path(
+        "create/",
+        views.RouteCreateApi.as_view(),
+        name="routes-create",
+    ),
+    path(
+        "<str:user_id>/",
+        views.RouteDetailApi.as_view(),
+        name="routes-detail",
+    ),
+    path(
+        "<str:user_id>/update/",
+        views.RouteUpdateApi.as_view(),
+        name="routes-update",
+    ),
+    path(
+        "<str:user_id>/delete/",
+        views.RouteDeleteApi.as_view(),
+        name="routes-delete",
+    ),
+]
+
 server_patterns = [
     path("", views.ServerListApi.as_view(), name="servers-list"),
     path(
@@ -74,11 +98,7 @@ server_patterns = [
         views.ServerDeleteApi.as_view(),
         name="servers-delete",
     ),
-    path(
-        "<str:server_id>/routes/",
-        views.ServerRouteListApi.as_view(),
-        name="servers-routes-list",
-    ),
+    path("<str:server_id>/routes/", include((route_patterns, "routes"))),
     path(
         "<str:server_id>/output/",
         views.ServerOutputApi.as_view(),

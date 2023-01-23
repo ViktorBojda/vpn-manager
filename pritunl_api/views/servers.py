@@ -9,7 +9,7 @@ from rest_framework.serializers import (
 )
 
 from pritunl_api.pritunl_request import auth_request
-from pritunl_api.selectors.servers import get_all_servers, get_server_by_id, get_server_orgs, get_server_output, get_server_routes
+from pritunl_api.selectors.servers import get_all_servers, get_server_by_id, get_server_orgs, get_server_output
 from pritunl_api.serializers import ServerSerializer
 from pritunl_api.services.servers import create_server, delete_server, update_server
 from pritunl_api.validators import validate_ipv4_network_address
@@ -29,6 +29,7 @@ class ServerCreateApi(APIView):
         data = create_server(**serializer.data)
 
         return Response(data, status.HTTP_201_CREATED)
+
 
 class ServerListApi(APIView):
     """
@@ -90,17 +91,6 @@ class ServerOutputApi(APIView):
 
     def get(self, request, server_id) -> Response:
         data = get_server_output(server_id)
-
-        return Response(data, status.HTTP_200_OK)
-
-
-class ServerRouteListApi(APIView):
-    """
-    Returns list of routes of server specified by id.
-    """
-
-    def get(self, request, server_id) -> Response:
-        data = get_server_routes(server_id)
 
         return Response(data, status.HTTP_200_OK)
 

@@ -62,3 +62,10 @@ class ServerSerializer(Serializer):
             ("sha512", "sha512"),
         ]
     )
+
+
+# {"id":null,"server":"6381f456f5fffa5ebb491bc0","network":"192.168.247.0/24","comment":"","metric":null,
+# "virtual_network":null,"wg_network":null,"network_link":null,"server_link":null,"nat":true,"nat_interface":"",
+# "nat_netmap":"","net_gateway":false,"advertise":false,"vpc_region":null,"vpc_id":null}
+class RouteSerializer(Serializer):
+    network = CharField(validators=[validate_ipv4_network_address])
