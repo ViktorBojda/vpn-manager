@@ -1,7 +1,12 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.serializers import (
+    Serializer,
+    CharField,
+    EmailField,
+    ListField,
+)
 
 from pritunl_api.selectors.users import get_all_users, get_user_by_id
 from pritunl_api.serializers import UserSerializer
@@ -37,7 +42,6 @@ class UserListApi(APIView):
         data = get_all_users(org_id)
 
         return Response(data, status.HTTP_200_OK)
-        # return render(request, "pritunl_api/test.html", {"data": data})
 
 
 class UserDetailApi(APIView):
@@ -56,7 +60,11 @@ class UserUpdateApi(APIView):
     Updates user specified by id and by assigned organization.
     """
 
-    InputSerializer = UserSerializer
+    class InputSerializer(Serializer):
+        name = CharField(required=False)
+        email = EmailField(required=False)
+        groups = ListField(required=False, child=CharField(), allow_empty=False)
+        pin = CharField(required=False, min_length=6)  # TODO only numbers
 
     def put(self, request, org_id, user_id) -> Response:
         serializer = self.InputSerializer(data=request.data)

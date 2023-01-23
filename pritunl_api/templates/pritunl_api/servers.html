@@ -2,9 +2,9 @@
 {% load static %}
 
 {% block content %}
-<h1>Users and Organizations</h1>
+<h1>Servers</h1>
 
-<div class="row">
+<!-- <div class="row">
     <div class="col-3">
         <button type="button" id="btn-add-org" class="btn btn-primary w-100">Add Organization</button>
     </div>
@@ -14,9 +14,9 @@
     <div class="col-3">
         <button type="button" id="btn-del-select" class="btn btn-danger w-100" disabled>Delete Selected</button>
     </div>
-</div>
+</div> -->
 
-<div id="org-container"></div>
+<div id="server-container"></div>
 
 <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal-header" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -34,5 +34,5 @@
 {% endblock content %}
 
 {% block js_scripts %}
-<script src="{% static 'pritunl_api/users_organizations.js' %}" defer></script>
+<script src="{% static 'pritunl_api/servers.js' %}" defer></script>
 {% endblock js_scripts %}

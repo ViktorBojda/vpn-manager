@@ -56,8 +56,8 @@ server_patterns = [
     path("", views.ServerListApi.as_view(), name="servers-list"),
     path(
         "create/",
-        views.OrganizationCreateApi.as_view(),
-        name="organizations-create",
+        views.ServerCreateApi.as_view(),
+        name="servers-create",
     ),
     path(
         "<str:server_id>/",
@@ -65,16 +65,30 @@ server_patterns = [
         name="servers-detail",
     ),
     path(
-        "<str:org_id>/update/",
-        views.OrganizationUpdateApi.as_view(),
-        name="organizations-update",
+        "<str:server_id>/update/",
+        views.ServerUpdateApi.as_view(),
+        name="servers-update",
     ),
     path(
-        "<str:org_id>/delete/",
-        views.OrganizationDeleteApi.as_view(),
-        name="organizations-delete",
+        "<str:server_id>/delete/",
+        views.ServerDeleteApi.as_view(),
+        name="servers-delete",
     ),
-    path("<str:org_id>/users/", include((user_patterns, "users"))),
+    path(
+        "<str:server_id>/routes/",
+        views.ServerRouteListApi.as_view(),
+        name="servers-routes-list",
+    ),
+    path(
+        "<str:server_id>/output/",
+        views.ServerOutputApi.as_view(),
+        name="servers-output",
+    ),
+    path(
+        "<str:server_id>/organizations/",
+        views.ServerOrganizationListApi.as_view(),
+        name="servers-organizations-list",
+    ),
 ]
 
 api_patterns = [
@@ -87,6 +101,11 @@ api_patterns = [
 
 app_name = "pritunl_api"
 urlpatterns = [
-    path("users/", views.UserOrganizationView.as_view(), name="users-organizations-view"),
+    path(
+        "users/",
+        views.UsersOrganizationsView.as_view(),
+        name="users-organizations-view",
+    ),
+    path("servers/", views.ServersView.as_view(), name="servers-view"),
     path("api/", include((api_patterns, "api"))),
 ]

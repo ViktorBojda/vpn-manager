@@ -5,11 +5,11 @@ const orgTemplate = (id, name) =>
             <input class="form-check-input org-check" type="checkbox" name="del-check" value="${id}" aria-label="Select checkbox">
             <span class="org-name">${name}</span>
         </div>
-        <ul class='list-group list-group-flush user-list'>
+        <ul class='list-group list-group-flush user-list'></ul>
     </div>`;
 const userTemplate = (id, name, org_id) => 
     `<li id="user-${id}" class="list-group-item user-item">
-        <input class="form-check-input user-check" type="checkbox" name="del-check" value="${id},${org_id}" aria-label="Select checkbox">
+        <input class="form-check-input user-check" type="checkbox" name="del-check" value="${org_id},${id}" aria-label="Select checkbox">
         <span class="user-name">${name}</span>
     </li>`;
 let orgData = [];
@@ -23,7 +23,7 @@ function deleteSelectedUsers(users) {
         ajaxCalls.push(
             $.ajax({
                 type: "DELETE",
-                url: urlBase + "organizations/" + IDs[1] + "/users/" + IDs[0] + "/delete/"
+                url: urlBase + "organizations/" + IDs[0] + "/users/" + IDs[1] + "/delete/"
             }).fail(function (xhr) {
                 alert(xhr.responseText);
             })

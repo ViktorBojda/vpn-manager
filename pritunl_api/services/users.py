@@ -37,30 +37,9 @@ def create_user(
     return response.json()
 
 
-def update_user(
-    *,
-    user_id: str,
-    org_id: str,
-    name: Optional[str] = None,
-    email: Optional[str] = None,
-    groups: Optional[List[str]] = None,
-    pin: Optional[str] = None,  # TODO only numbers
-    # TODO yubico_id
-    # TODO port_forwarding
-    # TODO network_links
-    # TODO client_to_client
-    # TODO auth_type
-    # TODO mac_addresses
-    # TODO dns_serve
-    # TODO dns_suffi
-    # TODO bypass_secondary
-) -> Dict:
-    args = locals()
-    del args["user_id"]
-    del args["org_id"]
-
+def update_user(*, user_id: str, org_id: str, **kwargs) -> Dict:
     user = get_user_by_id(user_id=user_id, org_id=org_id)
-    user.update(args)
+    user.update(kwargs)
 
     response = auth_request(
         method="PUT",

@@ -11,6 +11,25 @@
 </head>
 
 <body>
+    <div class="container-fluid p-0">
+        <nav class="navbar navbar-expand-sm bg-body-tertiary">
+            <div class="container-xxl">
+                <a class="navbar-brand">VPN Manager</a>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'pritunl_api:users-organizations-view' %}active{% endif %}"
+                            aria-current="page" href="{% url 'pritunl_api:users-organizations-view' %}">Users and
+                            Organizations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'pritunl_api:servers-view' %}active{% endif %}"
+                            aria-current="page" href="{% url 'pritunl_api:servers-view' %}">Servers</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
     <div id="main-container" class="container-xxl">
         {% block content %}{% endblock content %}
     </div>
