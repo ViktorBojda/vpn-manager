@@ -23,36 +23,19 @@ let routeData = {};
 let orgData = {};
 
 
-function deleteSelected(selected, url, splitID = false) {
+function deleteSelected(selected, url) {
     let ajaxCalls = []
-    if (splitID) {
-        selected.each(function() {
-            let IDs = $(this).val().split(",");
-            url = url.replace("%s", IDs[0]);
-            url = url.replace("%s", IDs[1]);
-            ajaxCalls.push(
-                $.ajax({
-                    type: "DELETE",
-                    url: urlBase + url
-                }).fail(function (xhr) {
-                    alert(xhr.responseText);
-                })
-            );
-        });
-    }
-    else {
-        selected.each(function() {
-            url = url.replace("%s", $(this).val());
-            ajaxCalls.push(
-                $.ajax({
-                    type: "DELETE",
-                    url: urlBase + url
-                }).fail(function (xhr) {
-                    alert(xhr.responseText);
-                })
-            );
-        })
-    }
+    selected.each(function() {
+        $(this).val().split(",").forEach(ID => url = url.replace("%s", ID))
+        ajaxCalls.push(
+            $.ajax({
+                type: "DELETE",
+                url: urlBase + url
+            }).fail(function (xhr) {
+                alert(xhr.responseText);
+            })
+        );
+    });
     return ajaxCalls;
 }
 
@@ -61,9 +44,9 @@ function deleteAllSelected(servers, routes, orgs) {
     if (servers.length)
         ajaxCalls = ajaxCalls.concat(deleteSelected(servers, "servers/%s/delete/"));
     if (routes.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/", true));
+        ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/"));
     if (orgs.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/", true));
+        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/"));
     return ajaxCalls;
 }
 

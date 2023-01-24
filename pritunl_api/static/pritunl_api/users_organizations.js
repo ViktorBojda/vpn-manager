@@ -16,14 +16,14 @@ let orgData = [];
 let userData = {};
 
 
-function deleteSelectedUsers(users) {
+function deleteSelected(selected, url) {
     let ajaxCalls = []
-    users.each(function() {
-        let IDs = $(this).val().split(",");
+    selected.each(function() {
+        $(this).val().split(",").forEach(ID => url = url.replace("%s", ID))
         ajaxCalls.push(
             $.ajax({
                 type: "DELETE",
-                url: urlBase + "organizations/" + IDs[0] + "/users/" + IDs[1] + "/delete/"
+                url: urlBase + url
             }).fail(function (xhr) {
                 alert(xhr.responseText);
             })
@@ -32,27 +32,12 @@ function deleteSelectedUsers(users) {
     return ajaxCalls;
 }
 
-function deleteSelectedOrgs(orgs) {
-    let ajaxCalls = []
-    orgs.each(function() {
-        ajaxCalls.push(
-            $.ajax({
-                type: "DELETE",
-                url: urlBase + "organizations/" + $(this).val() + "/delete/"
-            }).fail(function (xhr) {
-                alert(xhr.responseText);
-            })
-        );
-    })
-    return ajaxCalls;
-}
-
 function deleteAllSelected(orgs, users) {
     let ajaxCalls = [];
     if (orgs.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelectedOrgs(orgs));
+        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "organizations/%s/delete/"));
     if (users.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelectedUsers(users));
+        ajaxCalls = ajaxCalls.concat(deleteSelected(users, "organizations/%s/users/%s/delete/"));
     return ajaxCalls;
 }
 
