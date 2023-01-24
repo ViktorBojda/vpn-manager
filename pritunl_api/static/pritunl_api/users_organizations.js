@@ -244,6 +244,8 @@ function rebuildOrgContainer() {
         if (org.id in userData) {
             let userList = card.children(".user-list");
             userData[org.id].forEach(user => {
+                if (user.type == "server")
+                    return;
                 userList.append($(userTemplate(user.id, user.name, user.organization)));
             });
         }

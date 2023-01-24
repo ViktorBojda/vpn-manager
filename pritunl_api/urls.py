@@ -98,6 +98,21 @@ server_patterns = [
         views.ServerDeleteApi.as_view(),
         name="servers-delete",
     ),
+    path(
+        "<str:server_id>/start/",
+        views.ServerStartApi.as_view(),
+        name="servers-start",
+    ),
+    path(
+        "<str:server_id>/stop/",
+        views.ServerStopApi.as_view(),
+        name="servers-stop",
+    ),
+    path(
+        "<str:server_id>/restart/",
+        views.ServerRestartApi.as_view(),
+        name="servers-restart",
+    ),
     path("<str:server_id>/routes/", include((route_patterns, "routes"))),
     path(
         "<str:server_id>/organizations/",

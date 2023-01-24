@@ -4,6 +4,9 @@ const serverTemplate = (id, name) =>
         <div class='card-header server-header'>
             <input class="form-check-input server-check" type="checkbox" name="del-check" value="${id}" aria-label="Select checkbox">
             <span class="server-name">${name}</span>
+            <button type="button" class="btn btn-success btn-start-server">Start Server</button>
+            <button type="button" class="btn btn-primary btn-restart-server">Restart Server</button>
+            <button type="button" class="btn btn-warning btn-stop-server">Stop Server</button>
         </div>
         <ul class='list-group list-group-flush route-list'></ul>
         <ul class='list-group list-group-flush org-list'></ul>
@@ -110,7 +113,7 @@ function submitAttachOrg() {
         url: `${urlBase}servers/${serverID}/organizations/${orgID}/attach/`
     }).done(function (response) {
         $("#modal").modal("hide");
-        $.when(fetchOrgsByServerID(serverID)).then(function () {
+        $.when(fetchAttachedOrgsByServerID(serverID)).then(function () {
             rebuildServerOrgsByID(serverID);
         });
     }).fail(function (xhr) {
@@ -373,7 +376,13 @@ function rebuildServerRoutesByID(server_id) {
         let routeList = $(`#server-${server_id} > .route-list`);
         routeList.empty();
         routeData[server_id].forEach(route => {
-            routeList.append($(routeTemplate(route.id, route.network, route.server)));
+            if (route.virtual_network) {
+                let routeHTML = $(routeTemplate(route.id, route.network, route.server));
+                routeHTML.find(".route-check").remove();
+                routeList.append(routeHTML);
+            }
+            else
+                routeList.append($(routeTemplate(route.id, route.network, route.server)));
         });
     }
 }
@@ -384,6 +393,12 @@ function rebuildServerContainer() {
 
     serverData.forEach(server => {
         let card = $(serverTemplate(server.id, server.name));
+        if (server.status == "online")
+            card.find(".btn-start-server").addClass("d-none");
+        else {
+            card.find(".btn-restart-server").addClass("d-none");
+            card.find(".btn-stop-server").addClass("d-none");
+        }
         serverContainer.append(card);
 
         rebuildServerRoutesByID(server.id);
@@ -402,7 +417,7 @@ function fetchOrgs() {
     });
 }
 
-function fetchOrgsByServerID(serverID) {
+function fetchAttachedOrgsByServerID(serverID) {
     return $.ajax({
         type: "GET",
         url: `${urlBase}servers/${serverID}/organizations/`
@@ -434,7 +449,7 @@ function fetchRoutesAndOrgs() {
     ajaxCalls = [];
     serverData.forEach(server => {
         ajaxCalls.push(fetchRoutesByServerID(server.id));
-        ajaxCalls.push(fetchOrgsByServerID(server.id));
+        ajaxCalls.push(fetchAttachedOrgsByServerID(server.id));
     });
     return ajaxCalls;
 }
@@ -459,6 +474,57 @@ function fetchAllData() {
         });
     })
 }
+
+$(document).on("click", ".btn-restart-server", function() {
+    let restartBtn = $(this);
+    restartBtn.prop("disabled", true)
+    let serverID = restartBtn.parents(".server-wrapper").attr("id").replace("server-", "");
+    ajaxCalls.push(
+        $.ajax({
+            type: "PUT",
+            url: `${urlBase}servers/${serverID}/restart/`
+        }).done(function() {
+            restartBtn.prop("disabled", false)
+        }).fail(function (xhr) {
+            alert(xhr.responseText);
+        })
+    );
+})
+
+$(document).on("click", ".btn-stop-server", function() {
+    let stopBtn = $(this);
+    let serverID = stopBtn.parents(".server-wrapper").attr("id").replace("server-", "");
+    ajaxCalls.push(
+        $.ajax({
+            type: "PUT",
+            url: `${urlBase}servers/${serverID}/stop/`
+        }).done(function() {
+            stopBtn.addClass("d-none");
+            stopBtn.siblings(".btn-restart-server").addClass("d-none");
+            stopBtn.siblings(".btn-start-server").removeClass("d-none");
+        }).fail(function (xhr) {
+            alert(xhr.responseText);
+        })
+    );
+})
+
+$(document).on("click", ".btn-start-server", function() {
+    let startBtn = $(this);
+    startBtn.prop("disabled", true)
+    let serverID = startBtn.parents(".server-wrapper").attr("id").replace("server-", "");
+    ajaxCalls.push(
+        $.ajax({
+            type: "PUT",
+            url: `${urlBase}servers/${serverID}/start/`
+        }).done(function() {
+            startBtn.prop("disabled", false)
+            startBtn.addClass("d-none");
+            startBtn.siblings(".btn-restart-server, .btn-stop-server").removeClass("d-none");
+        }).fail(function (xhr) {
+            alert(xhr.responseText);
+        })
+    );
+})
 
 $(document).on("change", ".server-check", function() {
     $(this).parent().siblings(".org-list, .route-list").find("input[name='del-check']").prop({
