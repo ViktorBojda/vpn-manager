@@ -58,3 +58,18 @@ def attach_org_to_server(*, server_id: str, org_id: str):
         raise_err=True,
     )
     return response.json()
+
+
+def detach_org_from_server(*, server_id: str, org_id: str):
+    data = {"id": org_id, "server": server_id}
+    
+    response = auth_request(
+        method="DELETE",
+        path=f"/server/{server_id}/organization/{org_id}",
+        headers={
+            "Content-Type": "application/json",
+        },
+        data=json.dumps(data),
+        raise_err=True,
+    )
+    return response.json()

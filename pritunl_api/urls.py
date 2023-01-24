@@ -60,17 +60,17 @@ route_patterns = [
         name="routes-create",
     ),
     path(
-        "<str:user_id>/",
+        "<str:route_id>/",
         views.RouteDetailApi.as_view(),
         name="routes-detail",
     ),
     path(
-        "<str:user_id>/update/",
+        "<str:route_id>/update/",
         views.RouteUpdateApi.as_view(),
         name="routes-update",
     ),
     path(
-        "<str:user_id>/delete/",
+        "<str:route_id>/delete/",
         views.RouteDeleteApi.as_view(),
         name="routes-delete",
     ),
@@ -108,6 +108,11 @@ server_patterns = [
         "<str:server_id>/organizations/<str:org_id>/attach/",
         views.ServerAttachOrganizationApi.as_view(),
         name="servers-organizations-attach",
+    ),
+    path(
+        "<str:server_id>/organizations/<str:org_id>/detach/",
+        views.ServerDetachOrganizationApi.as_view(),
+        name="servers-organizations-detach",
     ),
     path(
         "<str:server_id>/output/",

@@ -23,6 +23,92 @@ let routeData = {};
 let orgData = {};
 
 
+function deleteSelected(selected, url, splitID = false) {
+    let ajaxCalls = []
+    if (splitID) {
+        selected.each(function() {
+            let IDs = $(this).val().split(",");
+            url = url.replace("%s", IDs[0]);
+            url = url.replace("%s", IDs[1]);
+            ajaxCalls.push(
+                $.ajax({
+                    type: "DELETE",
+                    url: urlBase + url
+                }).fail(function (xhr) {
+                    alert(xhr.responseText);
+                })
+            );
+        });
+    }
+    else {
+        selected.each(function() {
+            url = url.replace("%s", $(this).val());
+            ajaxCalls.push(
+                $.ajax({
+                    type: "DELETE",
+                    url: urlBase + url
+                }).fail(function (xhr) {
+                    alert(xhr.responseText);
+                })
+            );
+        })
+    }
+    return ajaxCalls;
+}
+
+function deleteAllSelected(servers, routes, orgs) {
+    let ajaxCalls = [];
+    if (servers.length)
+        ajaxCalls = ajaxCalls.concat(deleteSelected(servers, "servers/%s/delete/"));
+    if (routes.length)
+        ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/", true));
+    if (orgs.length)
+        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/", true));
+    return ajaxCalls;
+}
+
+$("#btn-del-select").on("click", function () {
+    let servers = $(".server-check:checked");
+    let routes = $(".route-check:checked:not(:disabled)");
+    let orgs = $(".org-check:checked:not(:disabled)");
+
+    let itemList = $("<ul></ul>");
+    if (servers.length) {
+        servers.each(function(){
+            itemList.append($("<li>" + $(this).siblings(".server-name").text() + "</li>"));
+        });
+    }
+    if (routes.length) {
+        routes.each(function(){
+            itemList.append($("<li>" + $(this).siblings(".route-network").text() + "</li>"));
+        });
+    }
+    if (orgs.length) {
+        orgs.each(function(){
+            itemList.append($("<li>" + $(this).siblings(".org-name").text() + "</li>"));
+        });
+    }
+
+    $("#modal-header").text("Delete Selected");
+    $("#modal-body").html(
+        `<h2 class="fs-6">Are you sure you want to delete the following items?</h2>
+        ${itemList.prop("outerHTML")}`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
+    )
+
+    $("#modal-btn-del").off().on("click", function() {
+        $.when.apply($, deleteAllSelected(servers, routes, orgs)).then(function() {
+            fetchAllData();
+            $("#modal").modal("hide");
+        });
+    });
+
+    $("#modal").modal("show");
+});
+
 function submitAttachOrg() {
     let formData = $("form").serializeArray();
     let data = {};
@@ -390,6 +476,17 @@ function fetchAllData() {
         });
     })
 }
+
+$(document).on("change", ".server-check", function() {
+    $(this).parent().siblings(".org-list, .route-list").find("input[name='del-check']").prop({
+        "disabled": $(this).is(":checked"),
+        "checked": $(this).is(":checked")
+    });
+});
+
+$(document).on("change", "input[name='del-check']", function() {
+    $("#btn-del-select").prop('disabled', !$("input[name='del-check']:checked").length);
+});
 
 $(function() {
     fetchAllData();
