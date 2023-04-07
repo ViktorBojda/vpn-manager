@@ -4,8 +4,8 @@ const serverTemplate = (id, name) =>
         <div class='card-header server-header'>
             <input class="form-check-input server-check" type="checkbox" name="del-check" value="${id}" aria-label="Select checkbox">
             <span class="server-name">${name}</span>
-            <button type="button" class="btn btn-success btn-start-server">Start Server</button>
-            <button type="button" class="btn btn-primary btn-restart-server">Restart Server</button>
+            <button type="button" class="btn btn-success btn-start-server ms-3">Start Server</button>
+            <button type="button" class="btn btn-primary btn-restart-server ms-3">Restart Server</button>
             <button type="button" class="btn btn-warning btn-stop-server">Stop Server</button>
         </div>
         <ul class='list-group list-group-flush route-list'></ul>
@@ -29,11 +29,12 @@ let orgData = {};
 function deleteSelected(selected, url) {
     let ajaxCalls = []
     selected.each(function() {
-        $(this).val().split(",").forEach(ID => url = url.replace("%s", ID))
+        let destUrl = url;
+        $(this).val().split(",").forEach(ID => destUrl = destUrl.replace("%s", ID))
         ajaxCalls.push(
             $.ajax({
                 type: "DELETE",
-                url: urlBase + url
+                url: urlBase + destUrl
             }).fail(function (xhr) {
                 alert(xhr.responseText);
             })
@@ -279,7 +280,7 @@ function submitAddServer() {
     }).done(function (response) {
         $("#modal").modal("hide");
         $.when(fetchServers(), fetchRoutesByServerID(response.id)).then(function () {
-            $("#server-container").append($(serverTemplate(response.id, response.name)));
+            rebuildServerByID(response.id);
             rebuildServerRoutesByID(response.id);
             sortServers();
         });
@@ -387,20 +388,26 @@ function rebuildServerRoutesByID(server_id) {
     }
 }
 
+function rebuildServerByID(server_id) {
+    let server = serverData.filter(server => server.id == server_id).pop();
+    if (server === undefined)
+        return;
+
+    let wrapper = $(serverTemplate(server.id, server.name));
+    if (server.status == "online")
+        wrapper.find(".btn-start-server").addClass("d-none");
+    else {
+        wrapper.find(".btn-restart-server").addClass("d-none");
+        wrapper.find(".btn-stop-server").addClass("d-none");
+    }
+    $("#server-container").append(wrapper);
+}
+
 function rebuildServerContainer() {
-    let serverContainer = $("#server-container");
-    serverContainer.empty();
+    $("#server-container").empty();
 
     serverData.forEach(server => {
-        let card = $(serverTemplate(server.id, server.name));
-        if (server.status == "online")
-            card.find(".btn-start-server").addClass("d-none");
-        else {
-            card.find(".btn-restart-server").addClass("d-none");
-            card.find(".btn-stop-server").addClass("d-none");
-        }
-        serverContainer.append(card);
-
+        rebuildServerByID(server.id);
         rebuildServerRoutesByID(server.id);
         rebuildServerOrgsByID(server.id);
     });

@@ -182,3 +182,16 @@ class ServerHostListApi(APIView):
         )
 
         return Response(data=response.json(), status=status.HTTP_200_OK)
+
+
+class EventApi(APIView):
+    """
+    Returns list of events
+    """
+
+    def get(self, request) -> Response:
+        response = auth_request(
+            method="GET", path=f"/event", raise_err=True
+        )
+
+        return Response(data=response.json(), status=status.HTTP_200_OK)

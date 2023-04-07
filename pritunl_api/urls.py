@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from pritunl_api import views
+from pritunl_api.views.servers import EventApi
 
 
 user_patterns = [
@@ -142,6 +143,7 @@ api_patterns = [
     path("status/", views.SystemStatusApi.as_view(), name="system-status"),
     path("server-logs/", views.ServerLogsApi.as_view(), name="server-logs"),
     path("system-logs/", views.SystemLogsApi.as_view(), name="system-logs"),
+    path("events/", views.EventApi.as_view(), name="events")
 ]
 
 app_name = "pritunl_api"

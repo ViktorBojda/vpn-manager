@@ -7,23 +7,22 @@ const orgTemplate = (id, name) =>
         </div>
         <ul class='list-group list-group-flush user-list'></ul>
     </div>`;
-const userTemplate = (id, name, org_id) => 
-    `<li id="user-${id}" class="list-group-item user-item">
+const userTemplate = (id, name, org_id) =>
+    `<li id="user-${id}" class="list-group-item d-flex user-item">
         <input class="form-check-input user-check" type="checkbox" name="del-check" value="${org_id},${id}" aria-label="Select checkbox">
         <span class="user-name">${name}</span>
+        <button type="button" class="btn btn-primary btn-profile-links ms-3">Links</button>
     </li>`;
-let orgData = [];
-let userData = {};
-
 
 function deleteSelected(selected, url) {
     let ajaxCalls = []
-    selected.each(function() {
-        $(this).val().split(",").forEach(ID => url = url.replace("%s", ID))
+    selected.each(function () {
+        let destUrl = url;
+        $(this).val().split(",").forEach(ID => destUrl = destUrl.replace("%s", ID))
         ajaxCalls.push(
             $.ajax({
                 type: "DELETE",
-                url: urlBase + url
+                url: urlBase + destUrl
             }).fail(function (xhr) {
                 alert(xhr.responseText);
             })
@@ -47,12 +46,12 @@ $("#btn-del-select").on("click", function () {
 
     let itemList = $("<ul></ul>");
     if (orgs.length) {
-        orgs.each(function(){
+        orgs.each(function () {
             itemList.append($("<li>" + $(this).siblings(".org-name").text() + "</li>"));
         });
     }
     if (users.length) {
-        users.each(function(){
+        users.each(function () {
             itemList.append($("<li>" + $(this).siblings(".user-name").text() + "</li>"));
         });
     }
@@ -67,8 +66,8 @@ $("#btn-del-select").on("click", function () {
         <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
     )
 
-    $("#modal-btn-del").off().on("click", function() {
-        $.when.apply($, deleteAllSelected(orgs, users)).then(function() {
+    $("#modal-btn-del").off().on("click", function () {
+        $.when.apply($, deleteAllSelected(orgs, users)).then(function () {
             fetchAllData();
             $("#modal").modal("hide");
         });
@@ -76,34 +75,6 @@ $("#btn-del-select").on("click", function () {
 
     $("#modal").modal("show");
 });
-
-function sortOrgs() {
-    let orgs = $("#org-container .org-wrapper").get();
-    if (!orgs.length) {
-        console.error("Failed to sort, no organizations found.");
-        return;
-    }
-
-    orgs.sort(function (org1, org2) {
-        return $(org1).children(".org-header").text().trim().localeCompare($(org2).children(".org-header").text().trim())
-    })
-
-    $("#org-container").append(orgs);
-}
-
-function sortUserList(orgID) {
-    let users = $(`#org-${orgID} .user-item`).get();
-    if (!users.length) {
-        console.error(`Failed to sort, no users found under organization with ID (${orgID}).`);
-        return;
-    }
-
-    users.sort(function (user1, user2) {
-        return $(user1).text().trim().localeCompare($(user2).text().trim())
-    })
-
-    $(`#org-${orgID} .user-list`).append(users);
-}
 
 function submitAddOrg() {
     let formData = $("form").serializeArray();
@@ -123,7 +94,7 @@ function submitAddOrg() {
     }).done(function (response) {
         $("#modal").modal("hide");
         $.when(fetchOrgs()).then(function () {
-            $("#org-container").append($(orgTemplate(response.id, response.name)));
+            $("#orgs-container").append($(orgTemplate(response.id, response.name)));
             sortOrgs();
         });
     }).fail(function (xhr) {
@@ -233,22 +204,54 @@ $("#btn-add-user").on("click", function () {
     $("#modal").modal("show");
 });
 
-function rebuildOrgContainer() {
-    let orgContainer = $("#org-container");
-    orgContainer.empty();
+function rebuildUsersByOrgID(orgID, userData) {
+    let userList = $(`#org-${orgID}`).find('.user-list');
 
-    orgData.forEach(org => {
-        let card = $(orgTemplate(org.id, org.name));
-        orgContainer.append(card);
+    // Check if the existing user item's ID is in the array of user data, if not remove it
+    userList.children().filter(function() {
+        const childId = $(this).attr('id');
+        const hasId = userData.some(function(obj) {
+            return `user-${obj.id}` == childId;
+        });
+        return !hasId;
+      }).remove();
 
-        if (org.id in userData) {
-            let userList = card.children(".user-list");
-            userData[org.id].forEach(user => {
-                if (user.type == "server")
-                    return;
-                userList.append($(userTemplate(user.id, user.name, user.organization)));
-            });
+    // Check whether user item exists, if it does update it, if not create new one
+    userData.forEach((user, idx) => {
+        let userItem = $(`#user-${user.id}`);
+        if (userItem.length)
+            userItem.find(".user-name").text(user.name);
+        else {
+            userItem = $(userTemplate(user.id, user.name, orgID));
+            userList.append(userItem);
         }
+        userItem.css('order', idx);
+    });
+}
+
+function rebuildOrgs(orgData) {
+    let orgsContainer = $("#orgs-container");
+
+    // Check if the existing org card's ID is in the array of org data, if not remove it
+    orgsContainer.children().filter(function() {
+        const childId = $(this).attr('id');
+        const hasId = orgData.some(function(obj) {
+            return `org-${obj.id}` == childId;
+        });
+        return !hasId;
+      }).remove();
+
+    // Check whether org card exists, if it does update it, if not create new one
+    orgData.forEach((org, idx) => {
+        let orgCard = $(`#org-${org.id}`);
+        if (orgCard.length)
+            orgCard.find(".org-name").text(org.name);
+        else {
+            orgCard = $(orgTemplate(org.id, org.name));
+            orgsContainer.append(orgCard);
+        }
+
+        orgCard.css('order', idx);
     });
 }
 
@@ -257,21 +260,11 @@ function fetchUsersByOrgID(orgID) {
         type: "GET",
         url: urlBase + "organizations/" + orgID + "/users/"
     }).done(function (data) {
-        if (data.length == 0)
-            delete userData[orgID];
-        else
-            userData[orgID] = data;
+        rebuildUsersByOrgID(orgID, data);
+        return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
     });
-}
-
-function fetchAllUsers() {
-    ajaxCalls = [];
-    orgData.forEach(org => {
-        ajaxCalls.push(fetchUsersByOrgID(org.id));
-    });
-    return ajaxCalls;
 }
 
 function fetchOrgs() {
@@ -279,32 +272,33 @@ function fetchOrgs() {
         type: "GET",
         url: urlBase + "organizations/"
     }).done(function (data) {
-        orgData = data;
+        rebuildOrgs(data);
+        return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
 
 function fetchAllData() {
-    $.when(fetchOrgs()).then(function () {
-        userData = {};
-        $.when.apply($, fetchAllUsers()).then(function () {
-            rebuildOrgContainer()
+    $.when(fetchOrgs()).then(function (orgData) {
+        orgData.forEach(org => {
+            fetchUsersByOrgID(org.id);
         });
     })
 }
 
-$(document).on("change", ".org-check", function() {
+$(document).on("change", ".org-check", function () {
     $(this).parent().siblings(".user-list").find(".user-check").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });
 });
 
-$(document).on("change", "input[name='del-check']", function() {
+$(document).on("change", "input[name='del-check']", function () {
     $("#btn-del-select").prop('disabled', !$("input[name='del-check']:checked").length);
 });
 
-$(function() {
+$(function () {
     fetchAllData();
+    listenForEvents();
 });
