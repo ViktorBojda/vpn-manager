@@ -40,42 +40,6 @@ function deleteAllSelected(orgs, users) {
     return ajaxCalls;
 }
 
-$("#btn-del-select").on("click", function () {
-    let orgs = $(".org-check:checked");
-    let users = $(".user-check:checked:not(:disabled)");
-
-    let itemList = $("<ul></ul>");
-    if (orgs.length) {
-        orgs.each(function () {
-            itemList.append($("<li>" + $(this).siblings(".org-name").text() + "</li>"));
-        });
-    }
-    if (users.length) {
-        users.each(function () {
-            itemList.append($("<li>" + $(this).siblings(".user-name").text() + "</li>"));
-        });
-    }
-
-    $("#modal-header").text("Delete Selected");
-    $("#modal-body").html(
-        `<h2 class="fs-6">Are you sure you want to delete the following items?</h2>
-        ${itemList.prop("outerHTML")}`
-    )
-    $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
-    )
-
-    $("#modal-btn-del").off().on("click", function () {
-        $.when.apply($, deleteAllSelected(orgs, users)).then(function () {
-            fetchAllData();
-            $("#modal").modal("hide");
-        });
-    });
-
-    $("#modal").modal("show");
-});
-
 function submitAddOrg() {
     let formData = $("form").serializeArray();
     let org = {};
@@ -93,43 +57,17 @@ function submitAddOrg() {
         data: org
     }).done(function (response) {
         $("#modal").modal("hide");
-        $.when(fetchOrgs()).then(function () {
-            $("#orgs-container").append($(orgTemplate(response.id, response.name)));
-            sortOrgs();
-        });
+        fetchOrgs();
     }).fail(function (xhr) {
         alert(xhr.responseText);
     })
 }
 
-$("#btn-add-org").on("click", function () {
-    $("#modal-header").text("Add Group");
-    $("#modal-body").html(
-        `<form id="form">
-            <div class="mb-3">
-                <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="form-input-name" name="name" required>
-            </div>
-        </form>`
-    )
-    $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" class="btn btn-primary">Add</button>`
-    )
-
-    $("#form").off().on("submit", function (event) {
-        event.preventDefault();
-        submitAddOrg();
-    });
-
-    $("#modal").modal("show");
-});
-
 function submitAddUser() {
-    let formData = $("form").serializeArray();
+    let formData = $("#form").serializeArray();
     let user = {};
 
-    formData.forEach(function (item, idx, object) {
+    formData.forEach(function(item, idx, object) {
         if (item.value.trim().length === 0)
             object.splice(idx, 1);
         else
@@ -142,67 +80,13 @@ function submitAddUser() {
         method: "POST",
         url: urlBase + "organizations/" + orgID + "/users/create/",
         data: user
-    }).done(function (response) {
+    }).done(function() {
         $("#modal").modal("hide");
-        $.when(fetchUsersByOrgID(orgID)).then(function () {
-            $("#org-" + orgID + " .user-list").append(
-                $(userTemplate(response[0].id, response[0].name, response[0].organization))
-            );
-            sortUserList(orgID);
-        });
-    }).fail(function (xhr) {
+        fetchUsersByOrgID(orgID);
+    }).fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
-
-$("#btn-add-user").on("click", function () {
-    if (!orgData.length) {
-        console.error("No organizations found, you must add organization before you can add user!");
-        return;
-    }
-    let orgSelect = $(
-        `<select id='form-input-org' name='organization' class='form-select' required>
-            <option value="" selected disabled>Select organization</option>
-        </select>`
-    );
-
-    $.each(orgData, function (key, val) {
-        orgSelect.append($(`<option value=${val.id}>${val.name}</option>`));
-    });
-
-    $("#modal-header").text("Add User");
-    $("#modal-body").html(
-        `<form id="form">
-            <div class="mb-3">
-                <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="form-input-name" name="name" required>
-            </div>
-            <div class="mb-3">
-                <label for="form-input-org" class="form-label">Organization</label>
-                ${orgSelect.prop("outerHTML")}
-            </div>
-            <div class="mb-3">
-                <label for="form-input-group" class="form-label">Groups</label>
-                <input type="text" class="form-control" id="form-input-group" name="groups">
-            </div>
-            <div class="mb-3">
-                <label for="form-input-email" class="form-label">Email address</label>
-                <input type="email" class="form-control" id="form-input-email" name="email">
-            </div>
-        </form>`
-    )
-    $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" class="btn btn-primary">Add</button>`
-    )
-
-    $("#form").off().on("submit", function (event) {
-        event.preventDefault();
-        submitAddUser();
-    });
-
-    $("#modal").modal("show");
-});
 
 function rebuildUsersByOrgID(orgID, userData) {
     let userList = $(`#org-${orgID}`).find('.user-list');
@@ -240,6 +124,13 @@ function rebuildOrgs(orgData) {
         });
         return !hasId;
       }).remove();
+
+    if (orgData.length == 0) {
+        $('#btn-add-user').prop('disabled', true);
+        console.log("No organizations found, you must add organization before you can add user!");
+        return;
+    }
+    $('#btn-add-user').prop('disabled', false).off('click').on('click', () => showAddUserModal(orgData));
 
     // Check whether org card exists, if it does update it, if not create new one
     orgData.forEach((org, idx) => {
@@ -286,6 +177,9 @@ function fetchAllData() {
         });
     })
 }
+
+$("#btn-del-select").on("click", showDeleteUsersOrgsModal);
+$("#btn-add-org").on("click", showAddOrgModal);
 
 $(document).on("change", ".org-check", function () {
     $(this).parent().siblings(".user-list").find(".user-check").prop({

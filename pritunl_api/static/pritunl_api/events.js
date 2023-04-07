@@ -17,6 +17,7 @@ function listenForEvents() {
 function parseEvents(events) {
     events.forEach(event => {
         switch (event.type) {
+            case "servers_updated":
             case "organizations_updated":
                 fetchOrgs();
                 break;
@@ -26,7 +27,7 @@ function parseEvents(events) {
                 break;
         
             default:
-                console.log("Unknown event type");
+                console.log("Unknown event type: " + event.type);
                 break;
         }
     });
