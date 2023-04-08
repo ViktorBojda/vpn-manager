@@ -8,8 +8,8 @@ const serverTemplate = (id, name) =>
             <button type="button" class="btn btn-primary btn-restart-server ms-3">Restart Server</button>
             <button type="button" class="btn btn-warning btn-stop-server">Stop Server</button>
         </div>
-        <ul class='list-group list-group-flush route-list'></ul>
-        <ul class='list-group list-group-flush org-list'></ul>
+        <ul class='list-group list-group-flush d-flex route-list'></ul>
+        <ul class='list-group list-group-flush d-flex org-list'></ul>
     </div>`;
 const routeTemplate = (id, network, server_id) => 
     `<li id="route-${id}" class="list-group-item route-item">
@@ -249,7 +249,7 @@ $("#btn-add-route").on("click", function () {
 });
 
 function sortServers() {
-    let servers = $("#server-container .server-wrapper").get();
+    let servers = $("#servers-container .server-wrapper").get();
     if (!servers.length) {
         console.error("Failed to sort, no servers found.");
         return;
@@ -259,7 +259,7 @@ function sortServers() {
         return $(server1).children(".server-header").text().trim().localeCompare($(server2).children(".server-header").text().trim())
     })
 
-    $("#server-container").append(servers);
+    $("#servers-container").append(servers);
 }
 
 function submitAddServer() {
@@ -400,11 +400,11 @@ function rebuildServerByID(server_id) {
         wrapper.find(".btn-restart-server").addClass("d-none");
         wrapper.find(".btn-stop-server").addClass("d-none");
     }
-    $("#server-container").append(wrapper);
+    $("#servers-container").append(wrapper);
 }
 
 function rebuildServerContainer() {
-    $("#server-container").empty();
+    $("#servers-container").empty();
 
     serverData.forEach(server => {
         rebuildServerByID(server.id);
@@ -547,3 +547,111 @@ $(document).on("change", "input[name='del-check']", function() {
 $(function() {
     fetchAllData();
 });
+
+function fetchAttachedOrgsByServerID2(serverID) {
+    return $.ajax({
+        type: "GET",
+        url: `${urlBase}servers/${serverID}/organizations/`
+    }).done(function (data) {
+        if (data.length == 0)
+            delete orgData[serverID];
+        else
+            orgData[serverID] = data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
+function rebuildRoutesByServerID2(serverID, serverData) {
+    let routeList = $(`#server-${serverID}`).find('.route-list');
+
+    // Check if the existing route item's ID is in the array of server data, if not remove it
+    routeList.children().filter(function() {
+        const childId = $(this).attr('id');
+        const hasId = userData.some(function(obj) {
+            return `route-${obj.id}` == childId;
+        });
+        return !hasId;
+      }).remove();
+
+    // Check whether route item exists, if it does update it, if not create new one
+    serverData.forEach((route, idx) => {
+        let routeItem = $(`#user-${user.id}`);
+        if (routeItem.length)
+            routeItem.find(".user-name").text(user.name);
+        else {
+            routeItem = $(userTemplate(user.id, user.name, orgID));
+            userList.append(routeItem);
+        }
+        userItem.css('order', idx);
+    });
+}
+
+function fetchRoutesByServerID2(serverID) {
+    return $.ajax({
+        type: "GET",
+        url: `${urlBase}servers/${serverID}/routes/`
+    }).done(function (data) {
+        return data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
+function fetchAllData2() {
+    $.when(fetchServers2()).then(function (serverData) {
+        rebuildServers2(serverData);
+        serverData.forEach(server => {
+            fetchRoutesByServerID2(server.id);
+            fetchAttachedOrgsByServerID2(server.id);
+        });
+    })
+}
+
+function fetchServers2() {
+    return $.ajax({
+        type: "GET",
+        url: urlBase + "servers/"
+    }).done(function (data) {
+        // serverData = data;
+        return data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
+function rebuildServers2(serverData) {
+    let serversContainer = $("#servers-container");
+
+    // Check if the existing server card's ID is in the array of server data, if not remove it
+    serversContainer.children().filter(function() {
+        const childId = $(this).attr('id');
+        const hasId = serverData.some(function(obj) {
+            return `server-${obj.id}` == childId;
+        });
+        return !hasId;
+      }).remove();
+
+    if (serverData.length == 0) {
+        $('#btn-add-route').prop('disabled', true);
+        console.log("No servers found, you must add server before you can add route!");
+        $('#btn-attach-org').prop('disabled', true);
+        console.log("No servers found, you must add server before you can attach organization!");
+        return;
+    }
+    $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddUserModal(orgData));
+    $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAddUserModal(orgData));
+
+    // Check whether server card exists, if it does update it, if not create new one
+    serverData.forEach((server, idx) => {
+        let serverCard = $(`#server-${server.id}`);
+        if (serverCard.length)
+            serverCard.find(".server-name").text(server.name);
+        else {
+            serverCard = $(serverTemplate(server.id, server.name));
+            serversContainer.append(serverCard);
+        }
+
+        serverCard.css('order', idx);
+    });
+}

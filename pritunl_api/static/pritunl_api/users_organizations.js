@@ -1,16 +1,16 @@
 const urlBase = "/pritunl/api/";
-const orgTemplate = (id, name) =>
-    `<div id=org-${id} class='card my-3 org-wrapper'>
+const orgTemplate = (orgData) =>
+    `<div id=org-${orgData.id} class='card my-3 org-wrapper'>
         <div class='card-header org-header'>
-            <input class="form-check-input org-check" type="checkbox" name="del-check" value="${id}" aria-label="Select checkbox">
-            <span class="org-name">${name}</span>
+            <input class="form-check-input org-check" type="checkbox" name="del-check" value="${orgData.id}" aria-label="Select checkbox">
+            <span class="org-name">${orgData.name}</span>
         </div>
-        <ul class='list-group list-group-flush user-list'></ul>
+        <ul class='list-group list-group-flush d-flex user-list'></ul>
     </div>`;
-const userTemplate = (id, name, org_id) =>
-    `<li id="user-${id}" class="list-group-item d-flex user-item">
-        <input class="form-check-input user-check" type="checkbox" name="del-check" value="${org_id},${id}" aria-label="Select checkbox">
-        <span class="user-name">${name}</span>
+const userTemplate = (userData) =>
+    `<li id="user-${userData.id}" class="list-group-item user-item">
+        <input class="form-check-input user-check" type="checkbox" name="del-check" value="${userData.organization},${userData.id}" aria-label="Select checkbox">
+        <span class="user-name">${userData.name}</span>
         <button type="button" class="btn btn-primary btn-profile-links ms-3">Links</button>
     </li>`;
 
@@ -88,62 +88,13 @@ function submitAddUser() {
     })
 }
 
-function rebuildUsersByOrgID(orgID, userData) {
-    let userList = $(`#org-${orgID}`).find('.user-list');
-
-    // Check if the existing user item's ID is in the array of user data, if not remove it
-    userList.children().filter(function() {
-        const childId = $(this).attr('id');
-        const hasId = userData.some(function(obj) {
-            return `user-${obj.id}` == childId;
-        });
-        return !hasId;
-      }).remove();
-
-    // Check whether user item exists, if it does update it, if not create new one
-    userData.forEach((user, idx) => {
-        let userItem = $(`#user-${user.id}`);
-        if (userItem.length)
-            userItem.find(".user-name").text(user.name);
-        else {
-            userItem = $(userTemplate(user.id, user.name, orgID));
-            userList.append(userItem);
-        }
-        userItem.css('order', idx);
-    });
-}
-
-function rebuildOrgs(orgData) {
-    let orgsContainer = $("#orgs-container");
-
-    // Check if the existing org card's ID is in the array of org data, if not remove it
-    orgsContainer.children().filter(function() {
-        const childId = $(this).attr('id');
-        const hasId = orgData.some(function(obj) {
-            return `org-${obj.id}` == childId;
-        });
-        return !hasId;
-      }).remove();
-
+function toggleAddUserBtn(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
         console.log("No organizations found, you must add organization before you can add user!");
         return;
     }
     $('#btn-add-user').prop('disabled', false).off('click').on('click', () => showAddUserModal(orgData));
-
-    // Check whether org card exists, if it does update it, if not create new one
-    orgData.forEach((org, idx) => {
-        let orgCard = $(`#org-${org.id}`);
-        if (orgCard.length)
-            orgCard.find(".org-name").text(org.name);
-        else {
-            orgCard = $(orgTemplate(org.id, org.name));
-            orgsContainer.append(orgCard);
-        }
-
-        orgCard.css('order', idx);
-    });
 }
 
 function fetchUsersByOrgID(orgID) {
@@ -151,7 +102,7 @@ function fetchUsersByOrgID(orgID) {
         type: "GET",
         url: urlBase + "organizations/" + orgID + "/users/"
     }).done(function (data) {
-        rebuildUsersByOrgID(orgID, data);
+        rebuildElements(data, 'user', `#org-${orgID} .user-list`, userTemplate, ['name']);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
@@ -163,7 +114,7 @@ function fetchOrgs() {
         type: "GET",
         url: urlBase + "organizations/"
     }).done(function (data) {
-        rebuildOrgs(data);
+        rebuildElements(data, 'org', '#orgs-container', orgTemplate, ['name'], toggleAddUserBtn);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
