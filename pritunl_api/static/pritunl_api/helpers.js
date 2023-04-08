@@ -47,7 +47,9 @@ function parseEvents(events) {
             case "users_updated":
                 ifExistsCall(fetchUsersByOrgID, event.resource_id);
                 break;
-        
+            
+            // TODO: server_hosts_updated, server_links_updated
+
             default:
                 console.log("Unknown event type: " + event.type);
                 break;
@@ -55,7 +57,7 @@ function parseEvents(events) {
     });
 }
 
-function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elmProps, callbackFunc = null) {
+function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elmProps, callbackFuncs = []) {
     let container = $(containerSelector);
     
     // Check if the existing element's ID is in the array of element data, if not remove it
@@ -71,9 +73,10 @@ function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elm
     elmData.forEach((data, idx) => {
         let elm = container.find(`#${elmPrefix}-${data.id}`);
         if (elm.length) {
-            elmProps.forEach(prop => {
-                elm.find(`.${elmPrefix}-${prop}`).text(data[prop]);
-            });
+            $.each(data, (key, value) => elm.find(`.${elmPrefix}-data-${key}`).text(value));
+            // elmProps.forEach(prop => {
+            //     elm.find(`.${elmPrefix}-${prop}`).text(data[prop]);
+            // });
         } else {
             elm = $(elmTemplate(data));
             container.append(elm);
@@ -82,11 +85,11 @@ function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elm
         elm.css('order', idx);
     });
 
-    if (callbackFunc) {
+    callbackFuncs.forEach(func => {
         // Check whether function needs parameters
-        if (callbackFunc.length)
-            callbackFunc(elmData);
-        else
-            callbackFunc();
-    }
+        if (func.length)
+            func(elmData);
+        else 
+            func();
+    });
 }

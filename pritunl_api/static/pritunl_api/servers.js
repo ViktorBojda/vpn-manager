@@ -3,23 +3,33 @@ const serverTemplate = (serverData) =>
     `<div id=server-${serverData.id} class='card my-3 server-wrapper'>
         <div class='card-header server-header'>
             <input class="form-check-input server-check" type="checkbox" name="del-check" value="${serverData.id}" aria-label="Select checkbox">
-            <span class="server-name">${serverData.name}</span>
-            <button type="button" class="btn btn-success btn-start-server ms-3">Start Server</button>
-            <button type="button" class="btn btn-primary btn-restart-server ms-3">Restart Server</button>
-            <button type="button" class="btn btn-warning btn-stop-server">Stop Server</button>
+            <span class="server-data-name">${serverData.name}</span>
+            <button type="button" class="btn btn-success server-start-btn ms-3">Start Server</button>
+            <button type="button" class="btn btn-primary server-restart-btn ms-3">Restart Server</button>
+            <button type="button" class="btn btn-warning server-stop-btn">Stop Server</button>
         </div>
+        <ul class="list-group">
+            <li class="list-group-item">Status: <span class="server-data-status">${serverData.status}</span></li>
+            <li class="list-group-item">Uptime: <span class="server-data-uptime">${serverData.uptime}</span></li>
+            <li class="list-group-item">Users Online: <span class="server-data-users_online">${serverData.users_online}</span></li>
+            <li class="list-group-item">Devices Online: <span class="server-data-devices_online">${serverData.devices_online}</span></li>
+            <li class="list-group-item">User Count: <span class="server-data-user_count">${serverData.user_count}</span></li>
+            <li class="list-group-item">Network: <span class="server-data-network">${serverData.network}</span></li>
+            <li class="list-group-item">Port: <span class="server-data-port">${serverData.port}</span></li>
+            <li class="list-group-item">Protocol: <span class="server-data-protocol">${serverData.protocol}</span></li>
+        </ul>
         <ul class='list-group list-group-flush d-flex route-list'></ul>
         <ul class='list-group list-group-flush d-flex org-list'></ul>
     </div>`;
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item route-item">
         <input class="form-check-input route-check" type="checkbox" name="del-check" value="${routeData.server},${routeData.id}" aria-label="Select checkbox">
-        <span class="route-network">${routeData.network}</span>
+        <span class="route-data-network">${routeData.network}</span>
     </li>`;
 const orgTemplate = (orgData) => 
     `<li id="org-${orgData.id}" class="list-group-item org-item">
         <input class="form-check-input org-check" type="checkbox" name="del-check" value="${orgData.server},${orgData.id}" aria-label="Select checkbox">
-        <span class="org-name">${orgData.name}</span>
+        <span class="org-data-name">${orgData.name}</span>
     </li>`;
 
 
@@ -120,21 +130,6 @@ function submitAddServer() {
     })
 }
 
-function rebuildServerByID(server_id) {
-    let server = serverData.filter(server => server.id == server_id).pop();
-    if (server === undefined)
-        return;
-
-    let wrapper = $(serverTemplate(server.id, server.name));
-    if (server.status == "online")
-        wrapper.find(".btn-start-server").addClass("d-none");
-    else {
-        wrapper.find(".btn-restart-server").addClass("d-none");
-        wrapper.find(".btn-stop-server").addClass("d-none");
-    }
-    $("#servers-container").append(wrapper);
-}
-
 function fetchOrgs() {
     return $.ajax({
         type: "GET",
@@ -148,57 +143,6 @@ function fetchOrgs() {
         alert(xhr.responseText);
     });
 }
-
-$(document).on("click", ".btn-restart-server", function() {
-    let restartBtn = $(this);
-    restartBtn.prop("disabled", true)
-    let serverID = restartBtn.parents(".server-wrapper").attr("id").replace("server-", "");
-    ajaxCalls.push(
-        $.ajax({
-            type: "PUT",
-            url: `${urlBase}servers/${serverID}/restart/`
-        }).done(function() {
-            restartBtn.prop("disabled", false)
-        }).fail(function (xhr) {
-            alert(xhr.responseText);
-        })
-    );
-})
-
-$(document).on("click", ".btn-stop-server", function() {
-    let stopBtn = $(this);
-    let serverID = stopBtn.parents(".server-wrapper").attr("id").replace("server-", "");
-    ajaxCalls.push(
-        $.ajax({
-            type: "PUT",
-            url: `${urlBase}servers/${serverID}/stop/`
-        }).done(function() {
-            stopBtn.addClass("d-none");
-            stopBtn.siblings(".btn-restart-server").addClass("d-none");
-            stopBtn.siblings(".btn-start-server").removeClass("d-none");
-        }).fail(function (xhr) {
-            alert(xhr.responseText);
-        })
-    );
-})
-
-$(document).on("click", ".btn-start-server", function() {
-    let startBtn = $(this);
-    startBtn.prop("disabled", true)
-    let serverID = startBtn.parents(".server-wrapper").attr("id").replace("server-", "");
-    ajaxCalls.push(
-        $.ajax({
-            type: "PUT",
-            url: `${urlBase}servers/${serverID}/start/`
-        }).done(function() {
-            startBtn.prop("disabled", false)
-            startBtn.addClass("d-none");
-            startBtn.siblings(".btn-restart-server, .btn-stop-server").removeClass("d-none");
-        }).fail(function (xhr) {
-            alert(xhr.responseText);
-        })
-    );
-})
 
 function fetchAttachedOrgsByServerID(serverID) {
     return $.ajax({
@@ -224,14 +168,29 @@ function fetchRoutesByServerID(serverID) {
         type: "GET",
         url: `${urlBase}servers/${serverID}/routes/`
     }).done(function (data) {
-        rebuildElements(data, 'route', `#server-${serverID} .route-list`, routeTemplate, ['network'], removeDeleteForVirtualNetwork);
+        rebuildElements(data, 'route', `#server-${serverID} .route-list`, routeTemplate, ['network'], [removeDeleteForVirtualNetwork]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
 
-function toggleAddBtns(serverData) {
+function serverControl(serverID, action) {
+    const actions = ['start', 'restart', 'stop'];
+    if (!actions.includes(action)) {
+        console.error('Invalid action: ' + action);
+        return;
+    }
+
+    $.ajax({
+        type: "PUT",
+        url: `${urlBase}servers/${serverID}/${action}/`
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
+function toggleBtns(serverData) {
     if (serverData.length == 0) {
         $('#btn-add-route').prop('disabled', true);
         console.log("No servers found, you must add server before you can add route!");
@@ -243,6 +202,23 @@ function toggleAddBtns(serverData) {
     $('#btn-attach-org').data('serverData', serverData);
 
     fetchOrgs();
+
+    serverData.forEach(server => {
+        let startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', () => serverControl(server.id, 'start'));
+        let restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', () => serverControl(server.id, 'restart'));
+        let stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', () => serverControl(server.id, 'stop'));
+
+        if (server.status == "online") {
+            startBtn.hide();
+            restartBtn.show();
+            stopBtn.show();
+        }
+        else {
+            startBtn.show();
+            restartBtn.hide();
+            stopBtn.hide();
+        }
+    });
 }
 
 function fetchServers() {
@@ -250,7 +226,7 @@ function fetchServers() {
         type: "GET",
         url: urlBase + "servers/"
     }).done(function (data) {
-        rebuildElements(data, 'server', '#servers-container', serverTemplate, ['name'], toggleAddBtns);
+        rebuildElements(data, 'server', '#servers-container', serverTemplate, ['name'], [toggleBtns]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);

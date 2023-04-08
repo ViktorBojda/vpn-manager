@@ -3,14 +3,14 @@ const orgTemplate = (orgData) =>
     `<div id=org-${orgData.id} class='card my-3 org-wrapper'>
         <div class='card-header org-header'>
             <input class="form-check-input org-check" type="checkbox" name="del-check" value="${orgData.id}" aria-label="Select checkbox">
-            <span class="org-name">${orgData.name}</span>
+            <span class="org-data-name">${orgData.name}</span>
         </div>
         <ul class='list-group list-group-flush d-flex user-list'></ul>
     </div>`;
 const userTemplate = (userData) =>
     `<li id="user-${userData.id}" class="list-group-item user-item">
         <input class="form-check-input user-check" type="checkbox" name="del-check" value="${userData.organization},${userData.id}" aria-label="Select checkbox">
-        <span class="user-name">${userData.name}</span>
+        <span class="user-data-name">${userData.name}</span>
         <button type="button" class="btn btn-primary btn-profile-links ms-3">Links</button>
     </li>`;
 
@@ -113,7 +113,7 @@ function fetchOrgs() {
         type: "GET",
         url: urlBase + "organizations/"
     }).done(function (data) {
-        rebuildElements(data, 'org', '#orgs-container', orgTemplate, ['name'], toggleBtns);
+        rebuildElements(data, 'org', '#orgs-container', orgTemplate, ['name'], [toggleBtns]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
