@@ -57,7 +57,6 @@ function submitAddOrg() {
         data: org
     }).done(function (response) {
         $("#modal").modal("hide");
-        fetchOrgs();
     }).fail(function (xhr) {
         alert(xhr.responseText);
     })
@@ -82,16 +81,16 @@ function submitAddUser() {
         data: user
     }).done(function() {
         $("#modal").modal("hide");
-        fetchUsersByOrgID(orgID);
     }).fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
 
-function toggleAddUserBtn(orgData) {
+function toggleBtns(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
         console.log("No organizations found, you must add organization before you can add user!");
+        $('#btn-del-select').prop('disabled', true);
         return;
     }
     $('#btn-add-user').prop('disabled', false).off('click').on('click', () => showAddUserModal(orgData));
@@ -114,7 +113,7 @@ function fetchOrgs() {
         type: "GET",
         url: urlBase + "organizations/"
     }).done(function (data) {
-        rebuildElements(data, 'org', '#orgs-container', orgTemplate, ['name'], toggleAddUserBtn);
+        rebuildElements(data, 'org', '#orgs-container', orgTemplate, ['name'], toggleBtns);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
