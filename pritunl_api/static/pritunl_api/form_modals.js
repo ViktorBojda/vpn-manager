@@ -1,80 +1,121 @@
-function showAddUserModal(orgData) {
-    let $orgSelect = $(
-        `<select id='form-input-org' name='organization' class='form-select' required>
-            <option value="" selected disabled>Select an organization</option>
-        </select>`
-    );
+function checkIfEmpty(inputs) {
+    // Checks if atleast one of the provided inputs is empty, if it is then disable submit button
+    $('#form-submit-btn').prop('disabled', inputs.toArray().some(input => input.value.trim() === ''));
+}
 
-    $.each(orgData, function(key, val) {
-        $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
-    });
+function showAddEditUserModal(action, data) {
+    const actions = ['add', 'edit'];
+    if (!actions.includes(action)) {
+        console.error('Invalid action provided: ' + action);
+        return;
+    }
+    let $orgDiv, hiddenInputs;
 
-    $("#modal-header").text("Add User");
+    if (action === 'add') {
+        if (!Array.isArray(data) || !data.length) {
+            alert("error: when action is 'add', data variable must be non empty array containing data about organizations");
+            return;
+        }
+        let $orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
+        $.each(data, function(key, val) {
+            $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
+        });
+        $orgDiv = $(
+            `<div class="mb-3">
+                <label for="form-input-org" class="form-label">Select an organization</label>
+                ${$orgSelect.prop("outerHTML")}
+            </div>`
+        );
+    }
+
+    if (action === 'edit') {
+        if (typeof data !== 'object' || Array.isArray(data)) {
+            alert("error: when action is 'edit', data variable must be object containing user's data in key value pairs");
+            return;
+        }
+        $.each(data, (key, value) => {
+            if (value == null)
+                data[key] = '';
+        });
+        hiddenInputs = $(
+            `<div>
+                <input type='hidden' name='organization' value=${data.organization}></input>
+                <input type='hidden' name='id' value=${data.id}></input>
+            </div>`
+        );
+    }
+
+    $("#modal-header").text(`${(action === 'edit') ? 'Edit User' : 'Add User'}`);
     $("#modal-body").html(
         `<form id="form">
             <div class="mb-3">
                 <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="form-input-name" name="name" required>
+                <input type="text" value="${(action === 'edit') ? data.name : ''}" class="form-control" id="form-input-name" name="name" required>
             </div>
-            <div class="mb-3">
-                <label for="form-input-org" class="form-label">Organization</label>
-                ${$orgSelect.prop("outerHTML")}
-            </div>
+            ${(action === 'edit') ? hiddenInputs.prop('outerHTML') : $orgDiv.prop('outerHTML')}
             <div class="mb-3">
                 <label for="form-input-group" class="form-label">Groups</label>
-                <input type="text" class="form-control" id="form-input-group" name="groups">
+                <input type="text" value="${(action === 'edit') ? data.groups : ''}" class="form-control" id="form-input-group" name="groups">
             </div>
             <div class="mb-3">
                 <label for="form-input-email" class="form-label">Email address</label>
-                <input type="email" class="form-control" id="form-input-email" name="email">
+                <input type="email" value="${(action === 'edit') ? data.email : ''}" class="form-control" id="form-input-email" name="email">
             </div>
         </form>`
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary" disabled>Add</button>`
+        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">${(action === 'edit') ? "Edit" : "Add"}</button>`
     )
 
-    $("#form-input-org").off().on('change', function() {
-        if ($(this).val() === '')
-            $("#form-submit-btn").prop('disabled', true);
-        else
-            $("#form-submit-btn").prop('disabled', false);
-    });
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
 
-    $("#form").off().on("submit", function (event) {
+    $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        submitAddUser();
+        action === 'add' ? submitAddUser() : submitEditUser();
     });
 
     $("#modal").modal("show");
 }
 
-function showAddOrgModal() {
-    $("#modal-header").text("Add Organization");
+function showAddEditOrgModal(action, data = null) {
+    const actions = ['add', 'edit'];
+    if (!actions.includes(action)) {
+        console.error('Invalid action provided: ' + action);
+        return;
+    }
+
+    let hiddenOrgID;
+    if (action === 'edit') {
+        if (typeof data !== 'object' || Array.isArray(data)) {
+            alert("error: when action is 'edit', data variable must be object containing organization's data in key value pairs");
+            return;
+        }
+        hiddenOrgID = $(`<input type='hidden' name='id' value=${data.id}></input>`);
+    }
+
+    $("#modal-header").text(`${(action === 'edit') ? "Edit Organization" : "Add Organization"}`);
     $("#modal-body").html(
         `<form id="form">
+            ${(action === 'edit') ? hiddenOrgID.prop('outerHTML') : ''}
             <div class="mb-3">
                 <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" value="" class="form-control" id="form-input-name" name="name" required>
+                <input type="text" value="${(action === 'edit') ? data.name : ''}" class="form-control" id="form-input-name" name="name" required>
             </div>
         </form>`
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary" disabled>Add</button>`
+        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">${(action === 'edit') ? "Edit" : "Add"}</button>`
     )
 
-    $("#form-input-name").off().on('input', function() {
-        if ($(this).val() === '')
-            $("#form-submit-btn").prop('disabled', true);
-        else
-            $("#form-submit-btn").prop('disabled', false);
-    });
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
 
-    $("#form").off().on("submit", function (event) {
-        event.preventDefault();
-        submitAddOrg();
+    $("#form").off('submit').on("submit", function (ev) {
+        ev.preventDefault();
+        action === 'add' ? submitAddOrg() : submitEditOrg();
     });
 
     $("#modal").modal("show");
@@ -85,8 +126,8 @@ function showDeleteUsersOrgsModal() {
     let users = $(".user-check:checked:not(:disabled)");
 
     let $itemList = $("<ul>");
-    orgs.each((_, elm) => $("<li>").text($(elm).siblings(".org-name").text()).appendTo($itemList));
-    users.each((_, elm) => $("<li>").text($(elm).siblings(".user-name").text()).appendTo($itemList));
+    orgs.each((_, elm) => $("<li>").text($(elm).siblings(".org-data-name").text()).appendTo($itemList));
+    users.each((_, elm) => $("<li>").text($(elm).siblings(".user-data-name").text()).appendTo($itemList));
 
     $("#modal-header").text("Delete Selected");
     $("#modal-body").html(
@@ -181,12 +222,7 @@ function showAddServerModal() {
 }
 
 function showAddRouteModal(serverData) {
-    let serverSelect = $(
-        `<select id='form-input-server' name='server' class='form-select' required>
-            <option value="" selected disabled>Select server</option>
-        </select>`
-    );
-
+    let serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
     $.each(serverData, function (key, val) {
         serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
     });
@@ -199,7 +235,7 @@ function showAddRouteModal(serverData) {
                 <input type="text" class="form-control" id="form-input-network" name="network" required>
             </div>
             <div class="mb-3">
-                <label for="form-input-server" class="form-label">Server</label>
+                <label for="form-input-server" class="form-label">Select a server</label>
                 ${serverSelect.prop("outerHTML")}
             </div>
         </form>`
@@ -223,22 +259,12 @@ function showAttachOrgModal(serverData, orgData) {
         return;
     }
 
-    let $serverSelect = $(
-        `<select id='form-input-server' name='server' class='form-select' required>
-            <option value="" selected disabled>Select server</option>
-        </select>`
-    );
-
+    let $serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
     $.each(serverData, function (key, val) {
         $('<option>').val(val.id).text(val.name).appendTo($serverSelect);
     });
 
-    let $orgSelect = $(
-        `<select id='form-input-org' name='organization' class='form-select' required>
-            <option value="" selected disabled>Select organization</option>
-        </select>`
-    );
-
+    let $orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
     $.each(orgData, function(key, val) {
         $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
     });
@@ -247,12 +273,12 @@ function showAttachOrgModal(serverData, orgData) {
     $("#modal-body").html(
         `<form id="form">
             <div class="mb-3">
-                <label for="form-input-server" class="form-label">Server</label>
-                ${$serverSelect.prop("outerHTML")}
+                <label for="form-input-org" class="form-label">Select an organization</label>
+                ${$orgSelect.prop("outerHTML")}
             </div>
             <div class="mb-3">
-                <label for="form-input-org" class="form-label">Organization</label>
-                ${$orgSelect.prop("outerHTML")}
+                <label for="form-input-server" class="form-label">Select a server</label>
+                ${$serverSelect.prop("outerHTML")}
             </div>
         </form>`
     )
@@ -277,17 +303,17 @@ function showDeleteServersModal() {
     let itemList = $("<ul></ul>");
     if (servers.length) {
         servers.each(function(){
-            itemList.append($("<li>" + $(this).siblings(".server-name").text() + "</li>"));
+            itemList.append($("<li>" + $(this).siblings(".server-data-name").text() + "</li>"));
         });
     }
     if (routes.length) {
         routes.each(function(){
-            itemList.append($("<li>" + $(this).siblings(".route-network").text() + "</li>"));
+            itemList.append($("<li>" + $(this).siblings(".route-data-network").text() + "</li>"));
         });
     }
     if (orgs.length) {
         orgs.each(function(){
-            itemList.append($("<li>" + $(this).siblings(".org-name").text() + "</li>"));
+            itemList.append($("<li>" + $(this).siblings(".org-data-name").text() + "</li>"));
         });
     }
 

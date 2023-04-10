@@ -40,7 +40,7 @@ def create_user(
 def update_user(*, user_id: str, org_id: str, **kwargs) -> Dict:
     user = get_user_by_id(user_id=user_id, org_id=org_id)
     user.update(kwargs)
-
+    
     response = auth_request(
         method="PUT",
         path=f"/user/{org_id}/{user_id}",

@@ -2,9 +2,9 @@ const urlBase = "/pritunl/api/";
 const serverTemplate = (serverData) =>
     `<div id=server-${serverData.id} class='card my-3 server-wrapper'>
         <div class='card-header server-header'>
-            <input class="form-check-input server-check" type="checkbox" name="del-check" value="${serverData.id}" aria-label="Select checkbox">
+            <input class="form-check-input server-check" type="checkbox" name="checkbox" value="${serverData.id}" aria-label="Select checkbox">
             <span class="server-data-name">${serverData.name}</span>
-            <button type="button" class="btn btn-success server-start-btn ms-3">Start Server</button>
+            <button type="button" disabled class="btn btn-success server-start-btn ms-3">Start Server</button>
             <button type="button" class="btn btn-primary server-restart-btn ms-3">Restart Server</button>
             <button type="button" class="btn btn-warning server-stop-btn">Stop Server</button>
         </div>
@@ -23,12 +23,12 @@ const serverTemplate = (serverData) =>
     </div>`;
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item route-item">
-        <input class="form-check-input route-check" type="checkbox" name="del-check" value="${routeData.server},${routeData.id}" aria-label="Select checkbox">
+        <input class="form-check-input route-check" type="checkbox" name="checkbox" value="${routeData.server},${routeData.id}" aria-label="Select checkbox">
         <span class="route-data-network">${routeData.network}</span>
     </li>`;
 const orgTemplate = (orgData) => 
     `<li id="org-${orgData.id}" class="list-group-item org-item">
-        <input class="form-check-input org-check" type="checkbox" name="del-check" value="${orgData.server},${orgData.id}" aria-label="Select checkbox">
+        <input class="form-check-input org-check" type="checkbox" name="checkbox" value="${orgData.server},${orgData.id}" aria-label="Select checkbox">
         <span class="org-data-name">${orgData.name}</span>
     </li>`;
 
@@ -130,33 +130,23 @@ function submitAddServer() {
     })
 }
 
-function fetchOrgs() {
-    return $.ajax({
-        type: "GET",
-        url: urlBase + "organizations/"
-    }).done(function (data) {
-        let serverData = $('#btn-attach-org').data('serverData');
-        if (serverData.length)
-            $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, data));
-        return data;
-    }).fail(function (xhr) {
-        alert(xhr.responseText);
-    });
-}
-
 function fetchAttachedOrgsByServerID(serverID) {
     return $.ajax({
         type: "GET",
         url: `${urlBase}servers/${serverID}/organizations/`
     }).done(function (data) {
-        rebuildElements(data, 'org', `#server-${serverID} .org-list`, orgTemplate, ['name']);
+        rebuildElements(data, 'org', `#server-${serverID} .org-list`, orgTemplate, [checkForCheckBoxes]);
+        if (data.length)
+            $(`#server-${serverID} .server-start-btn`).prop('disabled', false);
+        else
+            $(`#server-${serverID} .server-start-btn`).prop('disabled', true);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
 
-function removeDeleteForVirtualNetwork(routeData) {
+function delCheckboxForVirtualNetwork(routeData) {
     routeData.forEach(route => {
         if (route.virtual_network)
             $(`#server-${route.server} #route-${route.id} .route-check`).remove();
@@ -168,7 +158,7 @@ function fetchRoutesByServerID(serverID) {
         type: "GET",
         url: `${urlBase}servers/${serverID}/routes/`
     }).done(function (data) {
-        rebuildElements(data, 'route', `#server-${serverID} .route-list`, routeTemplate, ['network'], [removeDeleteForVirtualNetwork]);
+        rebuildElements(data, 'route', `#server-${serverID} .route-list`, routeTemplate, [delCheckboxForVirtualNetwork, checkForCheckBoxes]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
@@ -190,6 +180,14 @@ function serverControl(serverID, action) {
     });
 }
 
+function refreshAttachOrgModal() {
+    let serverData = $('#servers-container').data('serverData');
+    fetchOrgs([
+        (orgData, serverData) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, orgData)),
+        serverData
+    ]);
+}
+
 function toggleBtns(serverData) {
     if (serverData.length == 0) {
         $('#btn-add-route').prop('disabled', true);
@@ -199,9 +197,9 @@ function toggleBtns(serverData) {
         return;
     }
     $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddRouteModal(serverData));
-    $('#btn-attach-org').data('serverData', serverData);
-
-    fetchOrgs();
+    $('#servers-container').data('serverData', serverData);
+    
+    refreshAttachOrgModal();
 
     serverData.forEach(server => {
         let startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', () => serverControl(server.id, 'start'));
@@ -226,7 +224,7 @@ function fetchServers() {
         type: "GET",
         url: urlBase + "servers/"
     }).done(function (data) {
-        rebuildElements(data, 'server', '#servers-container', serverTemplate, ['name'], [toggleBtns]);
+        rebuildElements(data, 'server', '#servers-container', serverTemplate, [toggleBtns, checkForCheckBoxes]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
@@ -246,15 +244,13 @@ $("#btn-add-server").on("click", showAddServerModal);
 $("#btn-del-select").on("click", showDeleteServersModal);
 
 $(document).on("change", ".server-check", function() {
-    $(this).parent().siblings(".org-list, .route-list").find("input[name='del-check']").prop({
+    $(this).parent().siblings(".org-list, .route-list").find("input[name='checkbox']").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });
 });
 
-$(document).on("change", "input[name='del-check']", function() {
-    $("#btn-del-select").prop('disabled', !$("input[name='del-check']:checked").length);
-});
+$(document).on("change", "input[name='checkbox']", checkForCheckBoxes);
 
 $(function() {
     fetchAllData();

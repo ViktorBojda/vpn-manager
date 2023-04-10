@@ -14,12 +14,13 @@ function listenForEvents() {
     });
 }
 
-function ifExistsCall(func, param = null) {
-    if (typeof func === 'function')
+function ifExistsCall(funcName, param = null) {
+    if (typeof window[funcName] === 'function') {
         if (param)
-            func(param);
+            window[funcName](param);
         else
-            func();
+            window[funcName]();
+    }
 }
 
 function parseEvents(events) {
@@ -27,25 +28,26 @@ function parseEvents(events) {
     events.forEach(event => {
         console.log(event);
         switch (event.type) {
-            case "servers_updated":
-                ifExistsCall(fetchAllData);
+            case "servers_updated": // Called on server => (create, update, delete), org => (delete)
+                ifExistsCall('fetchAllData');
                 break;
 
-            case "organizations_updated":
-                ifExistsCall(fetchOrgs);
+            case "organizations_updated": // Called on org => (create, update), user => (create, delete)
+                ifExistsCall('rebuildOrgs');
+                ifExistsCall('refreshAttachOrgModal');
                 break;
 
-            case "server_routes_updated":
-                ifExistsCall(fetchRoutesByServerID, event.resource_id);
+            case "server_routes_updated": // Called on route => (create, update, delete), server => (update)
+                ifExistsCall('fetchRoutesByServerID', event.resource_id);
                 break;
 
-            case "server_organizations_updated":
-                ifExistsCall(fetchAttachedOrgsByServerID, event.resource_id);
-                ifExistsCall(fetchOrgs);
+            case "server_organizations_updated":                    
+                ifExistsCall('fetchAttachedOrgsByServerID', event.resource_id);
+                ifExistsCall('fetchOrgs');
                 break;
 
-            case "users_updated":
-                ifExistsCall(fetchUsersByOrgID, event.resource_id);
+            case "users_updated": // Called on user => (create, update, delete)
+                ifExistsCall('rebuildUsersByOrgID', event.resource_id);
                 break;
             
             // TODO: server_hosts_updated, server_links_updated
@@ -57,7 +59,22 @@ function parseEvents(events) {
     });
 }
 
-function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elmProps, callbackFuncs = []) {
+function checkForCheckBoxes() {
+    $("#btn-del-select").prop('disabled', !$("input[name='checkbox']:checked").length);
+}
+
+function parseFormData() {
+    let formData = $("form").serializeArray();
+    let data = {};
+
+    formData.forEach((obj) => {
+        if (obj.value.trim().length)
+            data[obj.name] = obj.value;
+    });
+    return data;
+}
+
+function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, callbackFuncs = []) {
     let container = $(containerSelector);
     
     // Check if the existing element's ID is in the array of element data, if not remove it
@@ -72,12 +89,9 @@ function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, elm
     // Check whether element exists, if it does update it, if not create new one
     elmData.forEach((data, idx) => {
         let elm = container.find(`#${elmPrefix}-${data.id}`);
-        if (elm.length) {
+        if (elm.length)
             $.each(data, (key, value) => elm.find(`.${elmPrefix}-data-${key}`).text(value));
-            // elmProps.forEach(prop => {
-            //     elm.find(`.${elmPrefix}-${prop}`).text(data[prop]);
-            // });
-        } else {
+        else {
             elm = $(elmTemplate(data));
             container.append(elm);
         }
