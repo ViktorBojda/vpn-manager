@@ -28,9 +28,7 @@ def create_user(
     response = auth_request(
         method="POST",
         path=f"/user/{org_id}",
-        headers={
-            "Content-Type": "application/json",
-        },
+        headers={"Content-Type": "application/json"},
         data=json.dumps(data),
         raise_err=True,
     )
@@ -44,9 +42,7 @@ def update_user(*, user_id: str, org_id: str, **kwargs) -> Dict:
     response = auth_request(
         method="PUT",
         path=f"/user/{org_id}/{user_id}",
-        headers={
-            "Content-Type": "application/json",
-        },
+        headers={"Content-Type": "application/json"},
         data=json.dumps(user),
         raise_err=True,
     )
@@ -55,3 +51,14 @@ def update_user(*, user_id: str, org_id: str, **kwargs) -> Dict:
 
 def delete_user(*, user_id: str, org_id: str):
     auth_request(method="DELETE", path=f"/user/{org_id}/{user_id}", raise_err=True)
+
+
+def bulk_create_user(*, org_id: str, user_list: List[Dict[str, Optional[str]]]) -> List[Dict]:
+    response = auth_request(
+        method="POST",
+        path=f"/user/{org_id}/multi",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps(user_list),
+        raise_err=True,
+    )
+    return response.json()

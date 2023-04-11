@@ -1,7 +1,6 @@
 from django.urls import include, path
 
 from pritunl_api import views
-from pritunl_api.views.servers import EventApi
 
 
 user_patterns = [
@@ -10,6 +9,11 @@ user_patterns = [
         "create/",
         views.UserCreateApi.as_view(),
         name="users-create",
+    ),
+    path(
+        "bulk-create/",
+        views.UserBulkCreateApi.as_view(),
+        name="users-bulk-create",
     ),
     path(
         "<str:user_id>/",

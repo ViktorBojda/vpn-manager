@@ -47,25 +47,39 @@ function submitAddOrg() {
 
 function submitEditOrg() {
     let data = parseFormData();
-    let orgID = data.organization;
-    delete data.organization;
-    updateOrg(orgID, data);
+    updateOrg(data.organization, data);
+}
+
+function submitBulkAddUsers() {
+    let data = parseFormData();
+    let userList = [];
+
+    let lines = data.user_list.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim() === "")
+            continue;
+        
+        let values = lines[i].split(",");
+        let name = values[0].trim();
+        let email = values[1] ? values[1].trim() : "";
+
+        userList.push({ name: name, email: email });
+    }
+    bulkCreateUsers(data.organization, {'user_list': userList});
 }
 
 function submitAddUser() {
     let data = parseFormData();
-    let orgID = data.organization;
-    delete data.organization;
-    createUser(orgID, data);
+    if ('groups' in data)
+        data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
+    createUser(data.organization, data)
 }
 
 function submitEditUser() {
     let data = parseFormData();
-    let orgID = data.organization;
-    delete data.organization;
-    let userID = data.id;
-    delete data.id;
-    updateUser(orgID, userID, data);
+    if ('groups' in data)
+        data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
+    updateUser(data.organization, data.id, data);
 }
 
 function toggleBtns(orgData) {
@@ -76,6 +90,7 @@ function toggleBtns(orgData) {
         return;
     }
     $('#btn-add-user').prop('disabled', false).off('click').on('click', () => showAddEditUserModal('add', orgData));
+    $('#btn-bulk-add-users').prop('disabled', false).off('click').on('click', () => showBulkAddUsersModal(orgData));
 }
 
 function setOrgEdits(orgData) {

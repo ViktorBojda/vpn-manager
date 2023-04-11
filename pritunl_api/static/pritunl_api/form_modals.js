@@ -3,6 +3,48 @@ function checkIfEmpty(inputs) {
     $('#form-submit-btn').prop('disabled', inputs.toArray().some(input => input.value.trim() === ''));
 }
 
+function showBulkAddUsersModal(orgData) {
+    if (!Array.isArray(orgData) || !orgData.length) {
+        alert("error: orgData variable must be non empty array containing data about organizations");
+        return;
+    }
+    let $orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
+        $.each(orgData, function(key, val) {
+            $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
+        });
+
+    $("#modal-header").text("Bulk Add Users");
+    $("#modal-body").html(
+        `<form id="form">
+            <div class="mb-3">
+                <label for="form-input-name" class="form-label">
+                    Enter list of usernames and optionally an email addresses on each line 
+                    with a comma separating the username from the email address
+                </label>
+                <textarea class="w-100" style="min-width: 40ch" name="user_list" id="form-input-user-list" rows="10" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="form-input-org" class="form-label">Select an organization</label>
+                ${$orgSelect.prop('outerHTML')}
+            </div>
+        </form>`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">Add</button>`
+    )
+
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
+
+    $("#form").off('submit').on("submit", function (event) {
+        event.preventDefault();
+        submitBulkAddUsers();
+    });
+
+    $("#modal").modal("show");
+}
+
 function showAddEditUserModal(action, data) {
     const actions = ['add', 'edit'];
     if (!actions.includes(action)) {

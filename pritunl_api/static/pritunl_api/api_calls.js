@@ -31,8 +31,22 @@ function fetchUsersByOrgID(orgID, doneCallback = []) {
 function createUser(orgID, data) {
     return $.ajax({
         method: "POST",
+        contentType: 'application/json',
         url: urlBase + "organizations/" + orgID + "/users/create/",
-        data: data
+        data: JSON.stringify(data)
+    }).done(function() {
+        $("#modal").modal("hide");
+    }).fail(function(xhr) {
+        alert(xhr.responseText);
+    })
+}
+
+function bulkCreateUsers(orgID, data) {
+    return $.ajax({
+        method: "POST",
+        contentType: 'application/json',
+        url: urlBase + "organizations/" + orgID + "/users/bulk-create/",
+        data: JSON.stringify(data)
     }).done(function() {
         $("#modal").modal("hide");
     }).fail(function(xhr) {
@@ -43,8 +57,9 @@ function createUser(orgID, data) {
 function updateUser(orgID, userID, data) {
     return $.ajax({
         method: "PUT",
+        contentType: 'application/json',
         url: urlBase + `organizations/${orgID}/users/${userID}/update/`,
-        data: data
+        data: JSON.stringify(data)
     }).done(function() {
         $("#modal").modal("hide");
     }).fail(function(xhr) {
@@ -55,8 +70,9 @@ function updateUser(orgID, userID, data) {
 function createOrg(data) {
     $.ajax({
         method: "POST",
+        contentType: 'application/json',
         url: urlBase + "organizations/create/",
-        data: data
+        data: JSON.stringify(data)
     }).done(function () {
         $("#modal").modal("hide");
     }).fail(function (xhr) {
@@ -67,8 +83,9 @@ function createOrg(data) {
 function updateOrg(orgID, data) {
     $.ajax({
         method: "PUT",
+        contentType: 'application/json',
         url: urlBase + `organizations/${orgID}/update/`,
-        data: data
+        data: JSON.stringify(data)
     }).done(function () {
         $("#modal").modal("hide");
     }).fail(function (xhr) {

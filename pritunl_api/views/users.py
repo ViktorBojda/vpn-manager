@@ -10,7 +10,7 @@ from rest_framework.serializers import (
 
 from pritunl_api.selectors.users import get_all_users, get_user_by_id
 from pritunl_api.serializers import UserSerializer
-from pritunl_api.services.users import create_user, delete_user, update_user
+from pritunl_api.services.users import bulk_create_user, create_user, delete_user, update_user
 
 
 class UserCreateApi(APIView):
@@ -29,6 +29,28 @@ class UserCreateApi(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = create_user(org_id=org_id, **serializer.data)
+
+        return Response(data, status.HTTP_201_CREATED)
+
+
+class UserBulkCreateApi(APIView):
+    """
+    Creates new users in bulk for organization.
+    """
+
+    class InputSerializer(Serializer):
+        class NameEmailSerializer(Serializer):
+            name = CharField()
+            email = EmailField(required=False)
+
+        user_list = ListField(child=NameEmailSerializer(), allow_empty=False)
+
+
+    def post(self, request, org_id) -> Response:
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = bulk_create_user(org_id=org_id, **serializer.data)
 
         return Response(data, status.HTTP_201_CREATED)
 
