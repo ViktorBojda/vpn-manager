@@ -402,3 +402,37 @@ function showDeleteServersModal() {
 
     $("#modal").modal("show");
 }
+
+function showUserLinksModal(data) {
+    if (typeof data !== 'object' || Array.isArray(data)) {
+        alert("error: data variable must be object containing user's link data in key value pairs");
+        return;
+    }
+
+    $("#modal-header").text("Temporary Profile Links");
+    $("#modal-body").html(
+        `<div class="mb-3">
+            <label for="form-input-name" class="form-label">Temporary url to download profile, expires after 24 hours</label>
+            <input type="text" readonly value="${data.base_url + data.key_url}" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="form-input-name" class="form-label">Temporary url to download zip profile, expires after 24 hours</label>
+            <input type="text" readonly value="${data.base_url + data.key_zip_url}" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="form-input-name" class="form-label">Temporary url to download Chromebook profile, expires after 24 hours</label>
+            <input type="text" readonly value="${data.base_url + data.key_onc_url}" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="form-input-name" class="form-label">Temporary url to view profile links, expires after 24 hours</label>
+            <input type="text" readonly value="${data.base_url + data.view_url}" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="form-input-name" class="form-label">Temporary uri link for Pritunl Client, expires after 24 hours</label>
+            <input type="text" readonly value="pritunl${data.base_url.substring(data.base_url.indexOf(':')) + data.uri_url}" class="form-control">
+        </div>`
+    )
+    $("#modal-footer").html(`<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`);
+
+    $("#modal").modal("show");
+}

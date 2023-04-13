@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +9,7 @@ from rest_framework.serializers import (
     ListField,
 )
 
-from pritunl_api.selectors.users import get_all_users, get_user_by_id
+from pritunl_api.selectors.users import get_all_users, get_user_by_id, get_user_links
 from pritunl_api.serializers import UserSerializer
 from pritunl_api.services.users import bulk_create_user, create_user, delete_user, update_user
 
@@ -68,7 +69,7 @@ class UserListApi(APIView):
 
 class UserDetailApi(APIView):
     """
-    Returns user specified by id and by assigned organization.
+    Returns user detail specified by id and by assigned organization.
     """
 
     def get(self, request, org_id, user_id) -> Response:
@@ -106,3 +107,15 @@ class UserDeleteApi(APIView):
         delete_user(user_id=user_id, org_id=org_id)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class UserLinksApi(APIView):
+    """
+    Returns user's links specified by id and by assigned organization.
+    """
+
+    def get(self, request, org_id, user_id) -> Response:
+        data = get_user_links(user_id=user_id, org_id=org_id)
+        data['base_url'] = settings.BASE_URL
+
+        return Response(data, status.HTTP_200_OK)

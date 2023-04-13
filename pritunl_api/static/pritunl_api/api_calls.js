@@ -28,6 +28,21 @@ function fetchUsersByOrgID(orgID, doneCallback = []) {
     });
 }
 
+function fetchUserLinks(orgID, userID, doneCallback = []) {
+    return $.ajax({
+        type: "GET",
+        url: urlBase + `organizations/${orgID}/users/${userID}/links/`
+    }).done(function (data) {
+        if (doneCallback.length) {
+            const callback = doneCallback.shift();
+            callback(data, ...doneCallback);
+        }
+        return data;
+    }).fail(function (xhr) {
+        alert(xhr.responseText);
+    });
+}
+
 function createUser(orgID, data) {
     return $.ajax({
         method: "POST",

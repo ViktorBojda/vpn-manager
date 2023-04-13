@@ -11,7 +11,7 @@ const userTemplate = (userData) =>
     `<li id="user-${userData.id}" class="list-group-item user-item">
         <input class="form-check-input user-check" type="checkbox" name="checkbox" value="${userData.organization},${userData.id}" aria-label="Select checkbox">
         <span class="user-data-name">${userData.name}</span>
-        <button type="button" class="btn btn-primary btn-profile-links ms-3">Links</button>
+        <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
     </li>`;
 
 function deleteSelected(selected, url) {
@@ -93,12 +93,15 @@ function toggleBtns(orgData) {
     $('#btn-bulk-add-users').prop('disabled', false).off('click').on('click', () => showBulkAddUsersModal(orgData));
 }
 
-function removeServerFromUserList(userData) {
+function configureUserList(userData) {
     userData.forEach((data, _) => {
         if (data.type === 'server') {
             $(`#org-${data.organization} #user-${data.id}`).remove();
             return;
         }
+
+        $(`#org-${data.organization} #user-${data.id} .user-links-btn`)
+            .off('click').on('click', () => fetchUserLinks(data.organization, data.id, [showUserLinksModal]));
     });
 }
 
@@ -106,7 +109,7 @@ function rebuildUsersByOrgID(orgID) {
     return fetchUsersByOrgID(
         orgID, 
         [rebuildElements, 'user', `#org-${orgID} .user-list`, userTemplate, 
-            [removeServerFromUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]]);
+            [configureUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]]);
 }
 
 function rebuildOrgs() {

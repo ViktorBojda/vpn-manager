@@ -30,6 +30,11 @@ user_patterns = [
         views.UserDeleteApi.as_view(),
         name="users-delete",
     ),
+    path(
+        "<str:user_id>/links/",
+        views.UserLinksApi.as_view(),
+        name="users-links",
+    ),
 ]
 
 organization_patterns = [
@@ -147,7 +152,7 @@ api_patterns = [
     path("status/", views.SystemStatusApi.as_view(), name="system-status"),
     path("server-logs/", views.ServerLogsApi.as_view(), name="server-logs"),
     path("system-logs/", views.SystemLogsApi.as_view(), name="system-logs"),
-    path("events/", views.EventApi.as_view(), name="events")
+    path("events/", views.EventApi.as_view(), name="events"),
 ]
 
 app_name = "pritunl_api"
