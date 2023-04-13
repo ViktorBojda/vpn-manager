@@ -21,7 +21,7 @@ function showBulkAddUsersModal(orgData) {
                     Enter list of usernames and optionally an email addresses on each line 
                     with a comma separating the username from the email address
                 </label>
-                <textarea class="w-100" style="min-width: 40ch" name="user_list" id="form-input-user-list" rows="10" required></textarea>
+                <textarea class="w-100" style="min-width: 40ch; resize: none;" name="user_list" id="form-input-user-list" rows="10" required></textarea>
             </div>
             <div class="mb-3">
                 <label for="form-input-org" class="form-label">Select an organization</label>
@@ -190,23 +190,38 @@ function showDeleteUsersOrgsModal() {
     $("#modal").modal("show");
 }
 
-function showAddServerModal() {
-    $("#modal-header").text("Add Server");
+function showAddEditServerModal(action, data = null) {
+    const actions = ['add', 'edit'];
+    if (!actions.includes(action)) {
+        console.error('Invalid action provided: ' + action);
+        return;
+    }
+    let hiddenServerID;
+    if (action === 'edit') {
+        if (typeof data !== 'object' || Array.isArray(data)) {
+            alert("error: when action is 'edit', data variable must be object containing server's data in key value pairs");
+            return;
+        }
+        hiddenServerID = $(`<input type='hidden' name='id' value=${data.id}></input>`);
+    }
+
+    $("#modal-header").text(`${(action === 'edit') ? 'Edit Server' : 'Add Server'}`);
     $("#modal-body").html(
         `<form id="form">
+            ${(action === 'edit') ? hiddenServerID.prop('outerHTML') : ''}
             <div class="mb-3">
                 <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="form-input-name" name="name" required>
+                <input type="text" value="${(action === 'edit') ? data.name : ''}" class="form-control" id="form-input-name" name="name" required>
             </div>
             <div class="mb-3">
                 <label for="form-input-network" class="form-label">Virtual Network</label>
-                <input type="text" class="form-control" id="form-input-network" name="network" required>
+                <input type="text" value="${(action === 'edit') ? data.network : ''}" class="form-control" id="form-input-network" name="network" required>
             </div>
             <div class="mb-3">
                 <div class="row g-3">
                     <div class="col-8">
                         <label for="form-input-port" class="form-label">Port</label>
-                        <input type="number" min="1" max="65535" class="form-control" id="form-input-port" name="port" required>
+                        <input type="number" value="${(action === 'edit') ? data.port : ''}" min="1" max="65535" class="form-control" id="form-input-port" name="port" required>
                     </div>
                     <div class="col-4">
                         <label for="form-input-protocol" class="form-label">Protocol</label>
@@ -255,9 +270,19 @@ function showAddServerModal() {
         <button type="submit" form="form" class="btn btn-primary">Submit</button>`
     )
 
-    $("#form").off().on("submit", function (event) {
-        event.preventDefault();
-        submitAddServer();
+    if (action === 'edit') {
+        'protocol' in data ? $('#form-input-protocol').val(data.protocol) : '';
+        'cipher' in data ? $('#form-input-cipher').val(data.cipher) : '';
+        'hash' in data ? $('#form-input-hash').val(data.hash) : '';
+        'network_mode' in data ? $('#form-input-network-mode').val(data.network_mode) : '';
+    }
+
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
+
+    $("#form").off('submit').on("submit", function (ev) {
+        ev.preventDefault();
+        action === 'add' ? submitAddServer() : submitEditServer();
     });
 
     $("#modal").modal("show");

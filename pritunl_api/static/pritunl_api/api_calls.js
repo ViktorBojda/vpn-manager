@@ -92,3 +92,29 @@ function updateOrg(orgID, data) {
         alert(xhr.responseText);
     })
 }
+
+function createServer(data) {
+    $.ajax({
+        method: "POST",
+        contentType: 'application/json',
+        url: urlBase + "servers/create/",
+        data: JSON.stringify(data)
+    }).done(function() {
+        $("#modal").modal("hide");
+    }).fail(function(xhr) {
+        alert(xhr.responseText);
+    })
+}
+
+function updateServer(serverID, data) {
+    $.ajax({
+        method: "PUT",
+        contentType: 'application/json',
+        url: urlBase + `servers/${serverID}/update/`,
+        data: JSON.stringify(data)
+    }).done(function() {
+        $("#modal").modal("hide");
+    }).fail(function(xhr) {
+        alert(xhr.responseText);
+    })
+}

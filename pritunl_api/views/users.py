@@ -41,7 +41,7 @@ class UserBulkCreateApi(APIView):
     class InputSerializer(Serializer):
         class NameEmailSerializer(Serializer):
             name = CharField()
-            email = EmailField(required=False)
+            email = EmailField(required=False, allow_blank=True)
 
         user_list = ListField(child=NameEmailSerializer(), allow_empty=False)
 

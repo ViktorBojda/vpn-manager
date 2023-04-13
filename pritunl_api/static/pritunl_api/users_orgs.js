@@ -47,7 +47,7 @@ function submitAddOrg() {
 
 function submitEditOrg() {
     let data = parseFormData();
-    updateOrg(data.organization, data);
+    updateOrg(data.id, data);
 }
 
 function submitBulkAddUsers() {
@@ -93,28 +93,26 @@ function toggleBtns(orgData) {
     $('#btn-bulk-add-users').prop('disabled', false).off('click').on('click', () => showBulkAddUsersModal(orgData));
 }
 
-function setOrgEdits(orgData) {
-    orgData.forEach((data, _) => {
-        let $orgName = $(`#org-${data.id} .org-data-name`);
-        if ($orgName.length)
-            $orgName.off('click').on('click', () => showAddEditOrgModal('edit', data));
-    });
-}
-
-function setUserEdits(userData) {
+function removeServerFromUserList(userData) {
     userData.forEach((data, _) => {
-        let $userName = $(`#org-${data.organization} #user-${data.id} .user-data-name`);
-        if ($userName.length)
-            $userName.off('click').on('click', () => showAddEditUserModal('edit', data));
+        if (data.type === 'server') {
+            $(`#org-${data.organization} #user-${data.id}`).remove();
+            return;
+        }
     });
 }
 
 function rebuildUsersByOrgID(orgID) {
-    return fetchUsersByOrgID(orgID, [rebuildElements, 'user', `#org-${orgID} .user-list`, userTemplate, [setUserEdits, checkForCheckBoxes]]);
+    return fetchUsersByOrgID(
+        orgID, 
+        [rebuildElements, 'user', `#org-${orgID} .user-list`, userTemplate, 
+            [removeServerFromUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]]);
 }
 
 function rebuildOrgs() {
-    return fetchOrgs([rebuildElements, 'org', '#orgs-container', orgTemplate, [toggleBtns, setOrgEdits, checkForCheckBoxes]]);
+    return fetchOrgs(
+        [rebuildElements, 'org', '#orgs-container', orgTemplate, 
+            [toggleBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]]);
 }
 
 function fetchAllData() {

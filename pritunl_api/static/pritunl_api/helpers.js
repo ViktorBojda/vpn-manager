@@ -28,7 +28,7 @@ function parseEvents(events) {
     events.forEach(event => {
         console.log(event);
         switch (event.type) {
-            case "servers_updated": // Called on server => (create, update, delete), org => (delete)
+            case "servers_updated": // Called on server => (create, update, delete, start, stop, restart), org => (attach, delete)
                 ifExistsCall('fetchAllData');
                 break;
 
@@ -37,7 +37,7 @@ function parseEvents(events) {
                 ifExistsCall('refreshAttachOrgModal');
                 break;
 
-            case "server_routes_updated": // Called on route => (create, update, delete), server => (update)
+            case "server_routes_updated": // Called on route => (create, update, delete), server => (update), org => (attach)
                 ifExistsCall('fetchRoutesByServerID', event.resource_id);
                 break;
 
@@ -50,7 +50,7 @@ function parseEvents(events) {
                 ifExistsCall('rebuildUsersByOrgID', event.resource_id);
                 break;
             
-            // TODO: server_hosts_updated, server_links_updated
+            // TODO: server_hosts_updated, server_links_updated, system_log_updated, log_updated, server_output_updated
 
             default:
                 console.log("Unknown event type: " + event.type);
@@ -100,10 +100,56 @@ function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, cal
     });
 
     callbackFuncs.forEach(func => {
-        // Check whether function needs parameters
-        if (func.length)
-            func(elmData);
-        else 
-            func();
+        // If obj is Array, take first element as function and assign the rest of array as it's parameters
+        if (Array.isArray(func)) {
+            const callback = func.shift();
+            callback(elmData, ...func)
+        }
+        else {
+            // Check whether function needs parameters
+            if (func.length)
+                func(elmData);
+            else 
+                func();
+        }
     });
+}
+
+function insertEditModal(elmData, elmPrefix, editModal) {
+    elmData.forEach((data, _) => {
+        let $elmName = $(`#${elmPrefix}-${data.id} .${elmPrefix}-data-name`);
+        if ($elmName.length)
+            $elmName.off('click').on('click', () => editModal('edit', data));
+    });
+}
+
+function startTimer(selector, elapsedSeconds) {
+    let elm = $(selector);
+    if (!elm.length)
+        return;
+
+    if (elm.data('timer') !== undefined)
+        clearInterval(elm.data('timer'));
+
+    elm.data('timer', setInterval(function() {
+        ++elapsedSeconds;
+        let seconds = elapsedSeconds;
+        let days = Math.floor(seconds / 86400);
+        seconds = seconds % 86400;
+        let hours = Math.floor(seconds / 3600);
+        seconds = seconds % 3600;
+        let minutes = Math.floor(seconds / 60);
+        seconds = seconds % 60;
+        elm.text(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000));
+}
+
+function stopTimer(selector) {
+    let elm = $(selector);
+    if (!elm.length || elm.data('timer') === undefined)
+        return;
+
+    clearInterval(elm.data('timer'));
+    elm.removeData('timer');
+    elm.text('-');    
 }

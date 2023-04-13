@@ -10,13 +10,18 @@ const serverTemplate = (serverData) =>
         </div>
         <ul class="list-group">
             <li class="list-group-item">Status: <span class="server-data-status">${serverData.status}</span></li>
-            <li class="list-group-item">Uptime: <span class="server-data-uptime">${serverData.uptime}</span></li>
-            <li class="list-group-item">Users Online: <span class="server-data-users_online">${serverData.users_online}</span></li>
+            <li class="list-group-item">Uptime: <span class="server-uptime">-</span></li>
+            <li class="list-group-item">
+                Users: <span class="server-data-users_online">${serverData.users_online}</span> /
+                <span class="server-data-user_count">${serverData.user_count}</span> users online
+            </li>
             <li class="list-group-item">Devices Online: <span class="server-data-devices_online">${serverData.devices_online}</span></li>
             <li class="list-group-item">User Count: <span class="server-data-user_count">${serverData.user_count}</span></li>
             <li class="list-group-item">Network: <span class="server-data-network">${serverData.network}</span></li>
-            <li class="list-group-item">Port: <span class="server-data-port">${serverData.port}</span></li>
-            <li class="list-group-item">Protocol: <span class="server-data-protocol">${serverData.protocol}</span></li>
+            <li class="list-group-item">
+                Port: <span class="server-data-port">${serverData.port}</span> /
+                <span class="server-data-protocol">${serverData.protocol}</span>
+            </li>
         </ul>
         <ul class='list-group list-group-flush d-flex route-list'></ul>
         <ul class='list-group list-group-flush d-flex org-list'></ul>
@@ -109,25 +114,13 @@ function submitAddRoute() {
 }
 
 function submitAddServer() {
-    let formData = $("form").serializeArray();
-    let server = {};
+    let data = parseFormData();
+    createServer(data);
+}
 
-    formData.forEach(function (item, idx, object) {
-        if (item.value.trim().length === 0)
-            object.splice(idx, 1);
-        else
-            server[item.name] = Number(item.value) ? Number(item.value) : item.value;
-    });
-
-    $.ajax({
-        method: "POST",
-        url: urlBase + "servers/create/",
-        data: server
-    }).done(function() {
-        $("#modal").modal("hide");
-    }).fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+function submitEditServer() {
+    let data = parseFormData();
+    updateServer(data.id, data);
 }
 
 function fetchAttachedOrgsByServerID(serverID) {
@@ -207,11 +200,13 @@ function toggleBtns(serverData) {
         let stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', () => serverControl(server.id, 'stop'));
 
         if (server.status == "online") {
+            startTimer(`#server-${server.id} .server-uptime`, server.uptime);
             startBtn.hide();
             restartBtn.show();
             stopBtn.show();
         }
         else {
+            stopTimer(`#server-${server.id} .server-uptime`);
             startBtn.show();
             restartBtn.hide();
             stopBtn.hide();
@@ -224,7 +219,8 @@ function fetchServers() {
         type: "GET",
         url: urlBase + "servers/"
     }).done(function (data) {
-        rebuildElements(data, 'server', '#servers-container', serverTemplate, [toggleBtns, checkForCheckBoxes]);
+        rebuildElements(data, 'server', '#servers-container', serverTemplate, 
+        [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]);
         return data;
     }).fail(function (xhr) {
         alert(xhr.responseText);
@@ -240,7 +236,7 @@ function fetchAllData() {
     })
 }
 
-$("#btn-add-server").on("click", showAddServerModal);
+$("#btn-add-server").on("click", () => showAddEditServerModal('add'));
 $("#btn-del-select").on("click", showDeleteServersModal);
 
 $(document).on("change", ".server-check", function() {
