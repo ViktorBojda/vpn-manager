@@ -394,7 +394,7 @@ function showDeleteServersModal() {
         <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
     )
 
-    $("#modal-btn-del").off().on("click", function() {
+    $("#modal-btn-del").off('click').on("click", function() {
         $.when.apply($, deleteAllSelected(servers, routes, orgs)).then(function() {
             $("#modal").modal("hide");
         });

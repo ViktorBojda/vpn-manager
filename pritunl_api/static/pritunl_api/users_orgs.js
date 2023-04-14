@@ -99,7 +99,6 @@ function configureUserList(userData) {
             $(`#org-${data.organization} #user-${data.id}`).remove();
             return;
         }
-
         $(`#org-${data.organization} #user-${data.id} .user-links-btn`)
             .off('click').on('click', () => fetchUserLinks(data.organization, data.id, [showUserLinksModal]));
     });

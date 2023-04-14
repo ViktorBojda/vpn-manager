@@ -190,8 +190,10 @@ class EventApi(APIView):
     """
 
     def get(self, request) -> Response:
+        event_id: str = request.query_params.get("id", None)
+        path = f"/event/{event_id}" if event_id else "/event"
         response = auth_request(
-            method="GET", path=f"/event", raise_err=True
+            method="GET", path=path, raise_err=True
         )
 
         return Response(data=response.json(), status=status.HTTP_200_OK)

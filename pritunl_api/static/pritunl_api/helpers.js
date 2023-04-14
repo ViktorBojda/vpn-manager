@@ -1,16 +1,19 @@
-function listenForEvents() {
+function listenForEvents(id = '') {
     $.ajax({
         url: urlBase + "events/",
         type: "GET",
-        success: function (data) {
-            parseEvents(data);
-        },
-        error: function (xhr, status, error) {
-            console.log("An error occurred: " + error);
-        },
-        complete: function () {
-            listenForEvents();
-        }
+        data: `id=${id}`
+    })
+    .done(function (data) {
+        const lastEventID = parseEvents(data);
+        if (lastEventID)
+            id = lastEventID;
+    })
+    .fail(function (xhr, status, error) {
+        console.log("error: " + error);
+    })
+    .always(function () {
+        listenForEvents(id);
     });
 }
 
@@ -25,28 +28,30 @@ function ifExistsCall(funcName, param = null) {
 
 function parseEvents(events) {
     console.log('#####################');
+    let lastEventID = null;
     events.forEach(event => {
+        lastEventID = event.id;
         console.log(event);
         switch (event.type) {
-            case "servers_updated": // Called on server => (create, update, delete, start, stop, restart), org => (attach, delete)
+            case "servers_updated": // server => [create, update, delete, start, stop, restart], org => [attach, detach, delete], user => [create]
                 ifExistsCall('fetchAllData');
                 break;
 
-            case "organizations_updated": // Called on org => (create, update), user => (create, delete)
+            case "organizations_updated": // org => [create, update, delete], user => [create, delete]
                 ifExistsCall('rebuildOrgs');
                 ifExistsCall('refreshAttachOrgModal');
                 break;
 
-            case "server_routes_updated": // Called on route => (create, update, delete), server => (update), org => (attach)
+            case "server_routes_updated": // route => [create, update, delete], server => [update], org => [attach, detach]
                 ifExistsCall('fetchRoutesByServerID', event.resource_id);
                 break;
 
-            case "server_organizations_updated":                    
+            case "server_organizations_updated": // org => [attach, detach, delete]
                 ifExistsCall('fetchAttachedOrgsByServerID', event.resource_id);
                 ifExistsCall('fetchOrgs');
                 break;
 
-            case "users_updated": // Called on user => (create, update, delete)
+            case "users_updated": // user => [create, update, delete], org => [attach, detach], server => [start, restart, stop]
                 ifExistsCall('rebuildUsersByOrgID', event.resource_id);
                 break;
             
@@ -56,7 +61,9 @@ function parseEvents(events) {
                 console.log("Unknown event type: " + event.type);
                 break;
         }
+
     });
+    return lastEventID;
 }
 
 function checkForCheckBoxes() {

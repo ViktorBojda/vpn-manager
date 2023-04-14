@@ -2,13 +2,15 @@ function fetchOrgs(doneCallback = []) {
     return $.ajax({
         type: "GET",
         url: urlBase + "organizations/"
-    }).done(function (data) {
+    })
+    .done(function (data) {
         if (doneCallback.length) {
             const callback = doneCallback.shift();
             callback(data, ...doneCallback);
         }
         return data;
-    }).fail(function (xhr) {
+    })
+    .fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
@@ -17,13 +19,15 @@ function fetchUsersByOrgID(orgID, doneCallback = []) {
     return $.ajax({
         type: "GET",
         url: urlBase + "organizations/" + orgID + "/users/"
-    }).done(function (data) {
+    })
+    .done(function (data) {
         if (doneCallback.length) {
             const callback = doneCallback.shift();
             callback(data, ...doneCallback);
         }
         return data;
-    }).fail(function (xhr) {
+    })
+    .fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
@@ -32,13 +36,15 @@ function fetchUserLinks(orgID, userID, doneCallback = []) {
     return $.ajax({
         type: "GET",
         url: urlBase + `organizations/${orgID}/users/${userID}/links/`
-    }).done(function (data) {
+    })
+    .done(function (data) {
         if (doneCallback.length) {
             const callback = doneCallback.shift();
             callback(data, ...doneCallback);
         }
         return data;
-    }).fail(function (xhr) {
+    })
+    .fail(function (xhr) {
         alert(xhr.responseText);
     });
 }
@@ -49,9 +55,11 @@ function createUser(orgID, data) {
         contentType: 'application/json',
         url: urlBase + "organizations/" + orgID + "/users/create/",
         data: JSON.stringify(data)
-    }).done(function() {
+    })
+    .done(function() {
         $("#modal").modal("hide");
-    }).fail(function(xhr) {
+    })
+    .fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
@@ -62,9 +70,11 @@ function bulkCreateUsers(orgID, data) {
         contentType: 'application/json',
         url: urlBase + "organizations/" + orgID + "/users/bulk-create/",
         data: JSON.stringify(data)
-    }).done(function() {
+    })
+    .done(function() {
         $("#modal").modal("hide");
-    }).fail(function(xhr) {
+    })
+    .fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
@@ -75,9 +85,11 @@ function updateUser(orgID, userID, data) {
         contentType: 'application/json',
         url: urlBase + `organizations/${orgID}/users/${userID}/update/`,
         data: JSON.stringify(data)
-    }).done(function() {
+    })
+    .done(function() {
         $("#modal").modal("hide");
-    }).fail(function(xhr) {
+    })
+    .fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
@@ -88,9 +100,11 @@ function createOrg(data) {
         contentType: 'application/json',
         url: urlBase + "organizations/create/",
         data: JSON.stringify(data)
-    }).done(function () {
+    })
+    .done(function () {
         $("#modal").modal("hide");
-    }).fail(function (xhr) {
+    })
+    .fail(function (xhr) {
         alert(xhr.responseText);
     })
 }
@@ -101,9 +115,11 @@ function updateOrg(orgID, data) {
         contentType: 'application/json',
         url: urlBase + `organizations/${orgID}/update/`,
         data: JSON.stringify(data)
-    }).done(function () {
+    })
+    .done(function () {
         $("#modal").modal("hide");
-    }).fail(function (xhr) {
+    })
+    .fail(function (xhr) {
         alert(xhr.responseText);
     })
 }
@@ -114,9 +130,11 @@ function createServer(data) {
         contentType: 'application/json',
         url: urlBase + "servers/create/",
         data: JSON.stringify(data)
-    }).done(function() {
+    })
+    .done(function() {
         $("#modal").modal("hide");
-    }).fail(function(xhr) {
+    })
+    .fail(function(xhr) {
         alert(xhr.responseText);
     })
 }
@@ -127,9 +145,11 @@ function updateServer(serverID, data) {
         contentType: 'application/json',
         url: urlBase + `servers/${serverID}/update/`,
         data: JSON.stringify(data)
-    }).done(function() {
+    })
+    .done(function() {
         $("#modal").modal("hide");
-    }).fail(function(xhr) {
+    })
+    .fail(function(xhr) {
         alert(xhr.responseText);
     })
 }

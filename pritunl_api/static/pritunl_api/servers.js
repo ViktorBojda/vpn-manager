@@ -67,21 +67,10 @@ function deleteAllSelected(servers, routes, orgs) {
 }
 
 function submitAttachOrg() {
-    let formData = $("form").serializeArray();
-    let data = {};
-
-    formData.forEach(function (item, idx, object) {
-        if (item.value.trim().length === 0)
-            object.splice(idx, 1);
-        else
-            data[item.name] = item.value;
-    });
-    let serverID = data.server;
-    let orgID = data.organization;
-
+    const data = parseFormData();
     $.ajax({
         method: "PUT",
-        url: `${urlBase}servers/${serverID}/organizations/${orgID}/attach/`
+        url: `${urlBase}servers/${data.server}/organizations/${data.organization}/attach/`
     }).done(function() {
         $("#modal").modal("hide");
     }).fail(function(xhr) {
@@ -90,22 +79,11 @@ function submitAttachOrg() {
 }
 
 function submitAddRoute() {
-    let formData = $("form").serializeArray();
-    let route = {};
-
-    formData.forEach(function (item, idx, object) {
-        if (item.value.trim().length === 0)
-            object.splice(idx, 1);
-        else
-            route[item.name] = item.value;
-    });
-    let serverID = route.server;
-    delete route.server;
-
+    const data = parseFormData();
     $.ajax({
         method: "POST",
-        url: `${urlBase}servers/${serverID}/routes/create/`,
-        data: route
+        url: `${urlBase}servers/${data.server}/routes/create/`,
+        data: data
     }).done(function() {
         $("#modal").modal("hide");
     }).fail(function(xhr) {
@@ -114,12 +92,12 @@ function submitAddRoute() {
 }
 
 function submitAddServer() {
-    let data = parseFormData();
+    const data = parseFormData();
     createServer(data);
 }
 
 function submitEditServer() {
-    let data = parseFormData();
+    const data = parseFormData();
     updateServer(data.id, data);
 }
 
@@ -158,23 +136,26 @@ function fetchRoutesByServerID(serverID) {
     });
 }
 
-function serverControl(serverID, action) {
+function serverControl(serverID, action, button) {
     const actions = ['start', 'restart', 'stop'];
     if (!actions.includes(action)) {
         console.error('Invalid action: ' + action);
         return;
     }
-
+    $(button).prop('disabled', true);
     $.ajax({
         type: "PUT",
         url: `${urlBase}servers/${serverID}/${action}/`
     }).fail(function (xhr) {
         alert(xhr.responseText);
+    }).always(function() {
+        $(button).prop('disabled', false);
     });
 }
 
 function refreshAttachOrgModal() {
-    let serverData = $('#servers-container').data('serverData');
+    // Refresh org list inside of attach org modal
+    const serverData = $('#servers-container').data('serverData');
     fetchOrgs([
         (orgData, serverData) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, orgData)),
         serverData
@@ -195,9 +176,9 @@ function toggleBtns(serverData) {
     refreshAttachOrgModal();
 
     serverData.forEach(server => {
-        let startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', () => serverControl(server.id, 'start'));
-        let restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', () => serverControl(server.id, 'restart'));
-        let stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', () => serverControl(server.id, 'stop'));
+        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', ev => serverControl(server.id, 'start', ev.target));
+        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', ev => serverControl(server.id, 'restart', ev.target));
+        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', ev => serverControl(server.id, 'stop', ev.target));
 
         if (server.status == "online") {
             startTimer(`#server-${server.id} .server-uptime`, server.uptime);

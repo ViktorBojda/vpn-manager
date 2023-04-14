@@ -125,7 +125,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 BASE_URL = config('BASE_URL')
 API_TOKEN = config('API_TOKEN')
