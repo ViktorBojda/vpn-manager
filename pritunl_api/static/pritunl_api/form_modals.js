@@ -210,12 +210,20 @@ function showAddEditServerModal(action, data = null) {
         `<form id="form">
             ${(action === 'edit') ? hiddenServerID.prop('outerHTML') : ''}
             <div class="mb-3">
-                <label for="form-input-name" class="form-label">Name</label>
-                <input type="text" value="${(action === 'edit') ? data.name : ''}" class="form-control" id="form-input-name" name="name" required>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label for="form-input-name" class="form-label">Name</label>
+                        <input type="text" value="${(action === 'edit') ? data.name : ''}" class="form-control" id="form-input-name" name="name" required>
+                    </div>
+                    <div class="col-6">
+                        <label for="form-input-network" class="form-label">Virtual Network</label>
+                        <input type="text" value="${(action === 'edit') ? data.network : ''}" class="form-control" id="form-input-network" name="network" required>
+                    </div>
+                </div>  
             </div>
             <div class="mb-3">
-                <label for="form-input-network" class="form-label">Virtual Network</label>
-                <input type="text" value="${(action === 'edit') ? data.network : ''}" class="form-control" id="form-input-network" name="network" required>
+                <label for="form-input-group" class="form-label">Groups</label>
+                <input type="text" value="${(action === 'edit') ? data.groups : ''}" class="form-control" id="form-input-group" name="groups">
             </div>
             <div class="mb-3">
                 <div class="row g-3">
@@ -327,12 +335,12 @@ function showAttachOrgModal(serverData, orgData) {
     }
 
     let $serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
-    $.each(serverData, function (key, val) {
+    $.each(serverData, function (_, val) {
         $('<option>').val(val.id).text(val.name).appendTo($serverSelect);
     });
 
     let $orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
-    $.each(orgData, function(key, val) {
+    $.each(orgData, function(_, val) {
         $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
     });
 

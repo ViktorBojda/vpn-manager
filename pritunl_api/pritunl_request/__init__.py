@@ -1,6 +1,8 @@
+import json
 import requests, time, uuid, hmac, hashlib, base64
-from rest_framework.exceptions import APIException
 from django.conf import settings
+
+from pritunl_api.exceptions import PritunlAPIException
 
 BASE_URL = settings.BASE_URL
 API_TOKEN = settings.API_TOKEN
@@ -41,9 +43,7 @@ def auth_request(
     if raise_err:
         try:
             response.raise_for_status()
-        except requests.HTTPError as err:
-            exception = APIException(detail=str(err))
-            exception.status_code = response.status_code
-            raise exception
-
+        except requests.HTTPError:
+            err_dict = json.loads(response.text)
+            raise PritunlAPIException(err_dict['error_msg'], err_dict['error'], response.status_code)
     return response

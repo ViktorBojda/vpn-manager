@@ -41,6 +41,7 @@ class UserSerializer(Serializer):
 class ServerSerializer(Serializer):
     name = CharField()
     network = CharField(validators=[validate_ipv4_network_address])
+    groups = ListField(required=False, child=CharField(), allow_empty=False)
     port = IntegerField(min_value=1, max_value=65535)
     protocol = ChoiceField(choices=[("tcp", "tcp"), ("udp", "udp")])
     network_mode = ChoiceField(choices=[("tunnel", "tunnel"), ("bridge", "bridge")])

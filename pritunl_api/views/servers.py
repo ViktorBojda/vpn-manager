@@ -6,6 +6,7 @@ from rest_framework.serializers import (
     CharField,
     IntegerField,
     ChoiceField,
+    ListField
 )
 
 from pritunl_api.pritunl_request import auth_request
@@ -61,6 +62,7 @@ class ServerUpdateApi(APIView):
     class InputSerializer(Serializer):
         name = CharField(required=False)
         network = CharField(required=False, validators=[validate_ipv4_network_address])
+        groups = ListField(required=False, child=CharField(), allow_empty=False)
         port = IntegerField(required=False, min_value=1, max_value=65535)
         protocol = ChoiceField(required=False, choices=[("tcp", "tcp"), ("udp", "udp")])
 

@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     'pritunl_api.apps.PritunlApiConfig',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'pritunl_api.exceptions.pritunl_exception_handler',
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

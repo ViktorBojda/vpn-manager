@@ -68,53 +68,34 @@ function deleteAllSelected(servers, routes, orgs) {
 
 function submitAttachOrg() {
     const data = parseFormData();
-    $.ajax({
-        method: "PUT",
-        url: `${urlBase}servers/${data.server}/organizations/${data.organization}/attach/`
-    }).done(function() {
-        $("#modal").modal("hide");
-    }).fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+    attachOrg(data.server, data.organization);
 }
 
 function submitAddRoute() {
     const data = parseFormData();
-    $.ajax({
-        method: "POST",
-        url: `${urlBase}servers/${data.server}/routes/create/`,
-        data: data
-    }).done(function() {
-        $("#modal").modal("hide");
-    }).fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+    createRoute(data.server, data);
 }
 
 function submitAddServer() {
     const data = parseFormData();
+    if ('groups' in data)
+        data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     createServer(data);
 }
 
 function submitEditServer() {
     const data = parseFormData();
+    if ('groups' in data)
+        data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateServer(data.id, data);
 }
 
-function fetchAttachedOrgsByServerID(serverID) {
-    return $.ajax({
-        type: "GET",
-        url: `${urlBase}servers/${serverID}/organizations/`
-    }).done(function (data) {
+function rebuildAttachedOrgsByServerID(serverID) {
+    fetchAttachedOrgsByServerID(serverID, [(data) => {
+        const startBtn = $(`#server-${serverID} .server-start-btn`);
+        data.length ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
         rebuildElements(data, 'org', `#server-${serverID} .org-list`, orgTemplate, [checkForCheckBoxes]);
-        if (data.length)
-            $(`#server-${serverID} .server-start-btn`).prop('disabled', false);
-        else
-            $(`#server-${serverID} .server-start-btn`).prop('disabled', true);
-        return data;
-    }).fail(function (xhr) {
-        alert(xhr.responseText);
-    });
+    }]);
 }
 
 function delCheckboxForVirtualNetwork(routeData) {
@@ -124,42 +105,29 @@ function delCheckboxForVirtualNetwork(routeData) {
     });
 } 
 
-function fetchRoutesByServerID(serverID) {
-    return $.ajax({
-        type: "GET",
-        url: `${urlBase}servers/${serverID}/routes/`
-    }).done(function (data) {
-        rebuildElements(data, 'route', `#server-${serverID} .route-list`, routeTemplate, [delCheckboxForVirtualNetwork, checkForCheckBoxes]);
-        return data;
-    }).fail(function (xhr) {
-        alert(xhr.responseText);
-    });
+function rebuildRoutesByServerID(serverID) {
+    fetchRoutesByServerID(
+        serverID, 
+        [rebuildElements, 'route', `#server-${serverID} .route-list`, routeTemplate, 
+            [delCheckboxForVirtualNetwork, checkForCheckBoxes]]);
 }
 
-function serverControl(serverID, action, button) {
+function configureServerBtns(serverID, action, button) {
     const actions = ['start', 'restart', 'stop'];
     if (!actions.includes(action)) {
         console.error('Invalid action: ' + action);
         return;
     }
     $(button).prop('disabled', true);
-    $.ajax({
-        type: "PUT",
-        url: `${urlBase}servers/${serverID}/${action}/`
-    }).fail(function (xhr) {
-        alert(xhr.responseText);
-    }).always(function() {
-        $(button).prop('disabled', false);
-    });
+    controlServer(serverID, action, [(btn) => $(btn).prop('disabled', false), button]);
 }
 
 function refreshAttachOrgModal() {
     // Refresh org list inside of attach org modal
     const serverData = $('#servers-container').data('serverData');
-    fetchOrgs([
-        (orgData, serverData) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, orgData)),
-        serverData
-    ]);
+    fetchOrgs(
+        [(orgData, serverData) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, orgData)),
+        serverData]);
 }
 
 function toggleBtns(serverData) {
@@ -176,9 +144,9 @@ function toggleBtns(serverData) {
     refreshAttachOrgModal();
 
     serverData.forEach(server => {
-        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', ev => serverControl(server.id, 'start', ev.target));
-        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', ev => serverControl(server.id, 'restart', ev.target));
-        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', ev => serverControl(server.id, 'stop', ev.target));
+        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'start', ev.target));
+        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'restart', ev.target));
+        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'stop', ev.target));
 
         if (server.status == "online") {
             startTimer(`#server-${server.id} .server-uptime`, server.uptime);
@@ -195,24 +163,17 @@ function toggleBtns(serverData) {
     });
 }
 
-function fetchServers() {
-    return $.ajax({
-        type: "GET",
-        url: urlBase + "servers/"
-    }).done(function (data) {
-        rebuildElements(data, 'server', '#servers-container', serverTemplate, 
-        [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]);
-        return data;
-    }).fail(function (xhr) {
-        alert(xhr.responseText);
-    });
+function rebuildServers() {
+    return fetchServers(
+        [rebuildElements, 'server', '#servers-container', serverTemplate, 
+            [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]]);
 }
 
 function fetchAllData() {
-    $.when(fetchServers()).then(function (serverData) {
+    $.when(rebuildServers()).then(function (serverData) {
         serverData.forEach(server => {
-            fetchRoutesByServerID(server.id);
-            fetchAttachedOrgsByServerID(server.id);
+            rebuildRoutesByServerID(server.id);
+            rebuildAttachedOrgsByServerID(server.id);
         });
     })
 }

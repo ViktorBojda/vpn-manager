@@ -82,7 +82,7 @@ function submitEditUser() {
     updateUser(data.organization, data.id, data);
 }
 
-function toggleBtns(orgData) {
+function configureNavbarBtns(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
         console.log("No organizations found, you must add organization before you can add user!");
@@ -105,7 +105,7 @@ function configureUserList(userData) {
 }
 
 function rebuildUsersByOrgID(orgID) {
-    return fetchUsersByOrgID(
+    fetchUsersByOrgID(
         orgID, 
         [rebuildElements, 'user', `#org-${orgID} .user-list`, userTemplate, 
             [configureUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]]);
@@ -114,7 +114,7 @@ function rebuildUsersByOrgID(orgID) {
 function rebuildOrgs() {
     return fetchOrgs(
         [rebuildElements, 'org', '#orgs-container', orgTemplate, 
-            [toggleBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]]);
+            [configureNavbarBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]]);
 }
 
 function fetchAllData() {

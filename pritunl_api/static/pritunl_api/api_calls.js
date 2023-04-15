@@ -1,155 +1,113 @@
+const createSettings = (method, data = null) => {
+    const settings = {type: method, contentType: 'application/json'};
+    data ? settings.data = JSON.stringify(data) : '';
+    return settings;
+}
+
+function apiCall({path, settings = {type: 'GET'}, doneCallback = [], passDoneData = true, failCallback = [], alwaysCallback = []}) {
+    return $.ajax(urlBase + path, settings)
+    .done((data) => {
+        if (doneCallback.length) {
+            const callback = doneCallback.shift();
+            (passDoneData) ? callback(data, ...doneCallback) : callback(...doneCallback);
+        }
+        return data;
+    })
+    .fail((jqXHR) => {
+        alert(jqXHR.responseJSON.message);
+        if (failCallback.length) {
+            const callback = failCallback.shift();
+            callback(jqXHR, ...failCallback);
+        }
+    })
+    .always(() => {
+        if (alwaysCallback.length) {
+            const callback = alwaysCallback.shift();
+            callback(...alwaysCallback);
+        }
+    })
+}
+
 function fetchOrgs(doneCallback = []) {
-    return $.ajax({
-        type: "GET",
-        url: urlBase + "organizations/"
-    })
-    .done(function (data) {
-        if (doneCallback.length) {
-            const callback = doneCallback.shift();
-            callback(data, ...doneCallback);
-        }
-        return data;
-    })
-    .fail(function (xhr) {
-        alert(xhr.responseText);
-    });
-}
-
-function fetchUsersByOrgID(orgID, doneCallback = []) {
-    return $.ajax({
-        type: "GET",
-        url: urlBase + "organizations/" + orgID + "/users/"
-    })
-    .done(function (data) {
-        if (doneCallback.length) {
-            const callback = doneCallback.shift();
-            callback(data, ...doneCallback);
-        }
-        return data;
-    })
-    .fail(function (xhr) {
-        alert(xhr.responseText);
-    });
-}
-
-function fetchUserLinks(orgID, userID, doneCallback = []) {
-    return $.ajax({
-        type: "GET",
-        url: urlBase + `organizations/${orgID}/users/${userID}/links/`
-    })
-    .done(function (data) {
-        if (doneCallback.length) {
-            const callback = doneCallback.shift();
-            callback(data, ...doneCallback);
-        }
-        return data;
-    })
-    .fail(function (xhr) {
-        alert(xhr.responseText);
-    });
-}
-
-function createUser(orgID, data) {
-    return $.ajax({
-        method: "POST",
-        contentType: 'application/json',
-        url: urlBase + "organizations/" + orgID + "/users/create/",
-        data: JSON.stringify(data)
-    })
-    .done(function() {
-        $("#modal").modal("hide");
-    })
-    .fail(function(xhr) {
-        alert(xhr.responseText);
-    })
-}
-
-function bulkCreateUsers(orgID, data) {
-    return $.ajax({
-        method: "POST",
-        contentType: 'application/json',
-        url: urlBase + "organizations/" + orgID + "/users/bulk-create/",
-        data: JSON.stringify(data)
-    })
-    .done(function() {
-        $("#modal").modal("hide");
-    })
-    .fail(function(xhr) {
-        alert(xhr.responseText);
-    })
-}
-
-function updateUser(orgID, userID, data) {
-    return $.ajax({
-        method: "PUT",
-        contentType: 'application/json',
-        url: urlBase + `organizations/${orgID}/users/${userID}/update/`,
-        data: JSON.stringify(data)
-    })
-    .done(function() {
-        $("#modal").modal("hide");
-    })
-    .fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+    return apiCall({path: 'organizations/', doneCallback: doneCallback});
 }
 
 function createOrg(data) {
-    $.ajax({
-        method: "POST",
-        contentType: 'application/json',
-        url: urlBase + "organizations/create/",
-        data: JSON.stringify(data)
-    })
-    .done(function () {
-        $("#modal").modal("hide");
-    })
-    .fail(function (xhr) {
-        alert(xhr.responseText);
-    })
+    return apiCall(
+        {path: 'organizations/create/', settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
 }
 
 function updateOrg(orgID, data) {
-    $.ajax({
-        method: "PUT",
-        contentType: 'application/json',
-        url: urlBase + `organizations/${orgID}/update/`,
-        data: JSON.stringify(data)
-    })
-    .done(function () {
-        $("#modal").modal("hide");
-    })
-    .fail(function (xhr) {
-        alert(xhr.responseText);
-    })
+    return apiCall(
+        {path: `organizations/${orgID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function fetchUsersByOrgID(orgID, doneCallback = []) {
+    return apiCall({path: `organizations/${orgID}/users/`, doneCallback: doneCallback});
+}
+
+function fetchUserLinks(orgID, userID, doneCallback = []) {
+    return apiCall({path: `organizations/${orgID}/users/${userID}/links/`, doneCallback: doneCallback});
+}
+
+function createUser(orgID, data) {
+    return apiCall(
+        {path: `organizations/${orgID}/users/create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function bulkCreateUsers(orgID, data) {
+    return apiCall(
+        {path: `organizations/${orgID}/users/bulk-create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function updateUser(orgID, userID, data) {
+    return apiCall(
+        {path: `organizations/${orgID}/users/${userID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function fetchServers(doneCallback = []) {
+    return apiCall({path: 'servers/', doneCallback: doneCallback});
+}
+
+function fetchAttachedOrgsByServerID(serverID, doneCallback = []) {
+    return apiCall({path: `servers/${serverID}/organizations/`, doneCallback: doneCallback});
 }
 
 function createServer(data) {
-    $.ajax({
-        method: "POST",
-        contentType: 'application/json',
-        url: urlBase + "servers/create/",
-        data: JSON.stringify(data)
-    })
-    .done(function() {
-        $("#modal").modal("hide");
-    })
-    .fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+    return apiCall(
+        {path: 'servers/create/', settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
 }
 
 function updateServer(serverID, data) {
-    $.ajax({
-        method: "PUT",
-        contentType: 'application/json',
-        url: urlBase + `servers/${serverID}/update/`,
-        data: JSON.stringify(data)
-    })
-    .done(function() {
-        $("#modal").modal("hide");
-    })
-    .fail(function(xhr) {
-        alert(xhr.responseText);
-    })
+    return apiCall(
+        {path: `servers/${serverID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function controlServer(serverID, action, alwaysCallback = []) {
+    return apiCall(
+        {path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), alwaysCallback: alwaysCallback}
+    );
+}
+
+function attachOrg(serverID, orgID) {
+    return apiCall(
+        {path: `servers/${serverID}/organizations/${orgID}/attach/`, settings: createSettings('PUT'), doneCallback: [() => $("#modal").modal("hide")]}
+    );
+}
+
+function fetchRoutesByServerID(serverID, doneCallback = []) {
+    return apiCall({path: `servers/${serverID}/routes/`, doneCallback: doneCallback});
+}
+
+function createRoute(serverID, data) {
+    return apiCall(
+        {path: `servers/${serverID}/routes/create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+    );
 }

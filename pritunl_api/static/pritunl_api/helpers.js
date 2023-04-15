@@ -51,7 +51,7 @@ function parseEvents(events) {
                 ifExistsCall('fetchOrgs');
                 break;
 
-            case "users_updated": // user => [create, update, delete], org => [attach, detach], server => [start, restart, stop]
+            case "users_updated": // user => [create, update, delete], org => [attach, detach], server => [update, start, restart, stop]
                 ifExistsCall('rebuildUsersByOrgID', event.resource_id);
                 break;
             
