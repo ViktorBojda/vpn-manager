@@ -297,8 +297,8 @@ function showAddEditServerModal(action, data = null) {
 }
 
 function showAddRouteModal(serverData) {
-    let serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
-    $.each(serverData, function (key, val) {
+    const serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
+    $.each(serverData, function (_, val) {
         serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
     });
 
@@ -317,10 +317,12 @@ function showAddRouteModal(serverData) {
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="form" class="btn btn-primary">Add</button>`
+        <button type="submit" id="form-submit-btn" form="form" class="btn btn-primary">Add</button>`
     )
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
 
-    $("#form").off().on("submit", function (event) {
+    $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
         submitAddRoute();
     });

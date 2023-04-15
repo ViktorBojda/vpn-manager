@@ -66,9 +66,18 @@ function deleteAllSelected(servers, routes, orgs) {
     return ajaxCalls;
 }
 
+function stopServerAndRepeat(err, serverID, repeatCallback) {
+    const errors = ['server_not_offline', 'server_route_online']
+    if (errors.includes(err.code))
+        controlServer(serverID, 'stop', repeatCallback);
+}
+
 function submitAttachOrg() {
     const data = parseFormData();
-    attachOrg(data.server, data.organization);
+    attachOrg(data.server, data.organization, [],
+        [stopServerAndRepeat, data.server, // failCallback of attachOrg
+            [attachOrg, data.server, data.organization, // repeatCallback of stopServerAndRepeat
+                [controlServer, data.server, 'start']]]); // doneCallback of attachOrg
 }
 
 function submitAddRoute() {
@@ -119,7 +128,7 @@ function configureServerBtns(serverID, action, button) {
         return;
     }
     $(button).prop('disabled', true);
-    controlServer(serverID, action, [(btn) => $(btn).prop('disabled', false), button]);
+    controlServer(serverID, action, [], [(btn) => $(btn).prop('disabled', false), button]);
 }
 
 function refreshAttachOrgModal() {

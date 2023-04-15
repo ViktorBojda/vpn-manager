@@ -14,10 +14,15 @@ function apiCall({path, settings = {type: 'GET'}, doneCallback = [], passDoneDat
         return data;
     })
     .fail((jqXHR) => {
-        alert(jqXHR.responseJSON.message);
+        let err;
+        $.each(jqXHR.responseJSON, (_, value) => {
+            Array.isArray(value) ? err = value[0] : err = jqXHR.responseJSON;
+            return false;
+        });
+        alert(err.message);
         if (failCallback.length) {
             const callback = failCallback.shift();
-            callback(jqXHR, ...failCallback);
+            callback(err, ...failCallback);
         }
     })
     .always(() => {
@@ -90,15 +95,17 @@ function updateServer(serverID, data) {
     );
 }
 
-function controlServer(serverID, action, alwaysCallback = []) {
+function controlServer(serverID, action, doneCallback = [], alwaysCallback = []) {
+    console.log("HERE: " + action);
     return apiCall(
-        {path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), alwaysCallback: alwaysCallback}
+        {path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), doneCallback: doneCallback, passDoneData: false, alwaysCallback: alwaysCallback}
     );
 }
 
-function attachOrg(serverID, orgID) {
+function attachOrg(serverID, orgID, doneCallback = [], failCallback = []) {
     return apiCall(
-        {path: `servers/${serverID}/organizations/${orgID}/attach/`, settings: createSettings('PUT'), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `servers/${serverID}/organizations/${orgID}/attach/`, settings: createSettings('PUT'),
+        doneCallback: doneCallback, passDoneData: false, failCallback: failCallback}
     );
 }
 
