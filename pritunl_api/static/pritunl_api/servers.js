@@ -56,14 +56,28 @@ function deleteSelected(selected, url) {
 }
 
 function deleteAllSelected(servers, routes, orgs) {
-    let ajaxCalls = [];
-    if (servers.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(servers, "servers/%s/delete/"));
-    if (routes.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/"));
-    if (orgs.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/"));
-    return ajaxCalls;
+    // let ajaxCalls = [];
+    // servers.each((_, server) => ajaxCalls.push(deleteServerApi({serverID: server.data('id')})));
+    // routes.each((_, route) => ajaxCalls.push(deleteRouteApi({serverID: route.data('serverID'), routeID: route.data('id')})));
+    // orgs.each((_, org) => ajaxCalls.push(detachOrgApi({serverID: org.data('serverID'), orgID: org.data('id')})));
+
+    // const ajaxCalls = orgs.map((org) => {return detachOrgApi({serverID: org.data('serverID'), orgID: org.data('id')})});
+    // $.when.apply($, deleteSelected(orgs, "servers/%s/organizations/%s/detach/"))
+    // .done((...data) => {
+    //     console.log(data);
+    // })
+    // .fail((...errs) => {
+    //     console.log(errs);
+    // }); 
+
+
+    // if (servers.length)
+    //     ajaxCalls = ajaxCalls.concat(deleteSelected(servers, "servers/%s/delete/"));
+    // if (routes.length)
+    //     ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/"));
+    // if (orgs.length)
+    //     ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/"));
+    // return ajaxCalls;
 }
 
 function stopServerAndRepeat({err, serverID, repeatCallbacks}) {
@@ -96,11 +110,45 @@ function attachOrg({startServer = false}) {
     });
 }
 
-function addRoute() {
+// function detachOrgs({orgs, startServer = false}) {
+//     const ajaxCalls = orgs.map((org) => {return detachOrg({serverID: org.data('serverID'), orgID: org.data('id')})});
+//     $.when.apply($, ajaxCalls).then(function())
+// }
+
+// function detachOrg({serverID, orgID}) {
+//     detachOrgApi({
+//         serverID: serverID, orgID: orgID,
+//         failCallbacks: [{
+//             func: stopServerAndRepeat,
+//             args: {
+//                 serverID: data.server,
+//                 repeatCallbacks: [{
+//                     func: detachOrg,
+//                     args: {serverID: serverID, orgID: orgID}
+//                 }]
+//             }
+//         }]
+//     })
+// }
+
+function addRoute({startServer = false}) {
     const data = parseFormData();
     createRouteApi({
         serverID: data.server, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [
+            {func: () => $("#modal").modal("hide")},
+            startServer ? {func: controlServer, args: {serverID: data.server, action: 'start'}} : {}
+        ],
+        failCallbacks: [{
+            func: stopServerAndRepeat,
+            args: {
+                serverID: data.server,
+                repeatCallbacks: [{
+                    func: addRoute,
+                    args: {startServer: true}
+                }]
+            }
+        }]
     });
 }
 
@@ -114,13 +162,26 @@ function addServer() {
     });
 }
 
-function editServer() {
+function editServer({startServer = false}) {
     const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateServerApi({
         serverID: data.id, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [
+            {func: () => $("#modal").modal("hide")},
+            startServer ? {func: controlServer, args: {serverID: data.id, action: 'start'}} : {}
+        ],
+        failCallbacks: [{
+            func: stopServerAndRepeat,
+            args: {
+                serverID: data.id,
+                repeatCallbacks: [{
+                    func: editServer,
+                    args: {startServer: true}
+                }]
+            }
+        }]
     });
 }
 
@@ -138,7 +199,7 @@ function rebuildAttachedOrgsByServerID(serverID) {
                 func: rebuildElements,
                 args: {
                     prefix: 'org', contSelector: `#server-${serverID} .org-list`, template: orgTemplate,
-                    callbacks: [checkForCheckBoxes]
+                    callbacks: [[insertDataIntoCheckboxes, 'org'], checkForCheckBoxes]
                 }
             }
         ]
@@ -150,7 +211,15 @@ function delCheckboxForVirtualNetwork(routeData) {
         if (route.virtual_network)
             $(`#server-${route.server} #route-${route.id} .route-check`).remove();
     });
-} 
+}
+
+function insertDataIntoCheckboxes(elmData, prefix = null) {
+    elmData.forEach(data => {
+        prefix ? 
+        $(`#server-${data.server} #${prefix}-${data.id} .${prefix}-check`).data('serverID', data.server).data('id', data.id) : 
+        $(`#server-${data.id} .server-check`).data('id', data.id)
+    });
+}
 
 function rebuildRoutesByServerID(serverID) {
     fetchRoutesByServerIdApi({
@@ -159,7 +228,7 @@ function rebuildRoutesByServerID(serverID) {
             func: rebuildElements,
             args: {
                 prefix: 'route', contSelector: `#server-${serverID} .route-list`, template: routeTemplate,
-                callbacks: [delCheckboxForVirtualNetwork, checkForCheckBoxes]
+                callbacks: [[insertDataIntoCheckboxes, 'route'], delCheckboxForVirtualNetwork, checkForCheckBoxes]
             }
         }]
     });
