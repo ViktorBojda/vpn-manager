@@ -39,7 +39,7 @@ function showBulkAddUsersModal(orgData) {
 
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        submitBulkAddUsers();
+        bulkAddUsers();
     });
 
     $("#modal").modal("show");
@@ -115,7 +115,7 @@ function showAddEditUserModal(action, data) {
 
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        action === 'add' ? submitAddUser() : submitEditUser();
+        action === 'add' ? addUser() : editUser();
     });
 
     $("#modal").modal("show");
@@ -157,7 +157,7 @@ function showAddEditOrgModal(action, data = null) {
 
     $("#form").off('submit').on("submit", function (ev) {
         ev.preventDefault();
-        action === 'add' ? submitAddOrg() : submitEditOrg();
+        action === 'add' ? addOrg() : editOrg();
     });
 
     $("#modal").modal("show");
@@ -290,7 +290,7 @@ function showAddEditServerModal(action, data = null) {
 
     $("#form").off('submit').on("submit", function (ev) {
         ev.preventDefault();
-        action === 'add' ? submitAddServer() : submitEditServer();
+        action === 'add' ? addServer() : editServer();
     });
 
     $("#modal").modal("show");
@@ -324,13 +324,13 @@ function showAddRouteModal(serverData) {
 
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        submitAddRoute();
+        addRoute();
     });
 
     $("#modal").modal("show");
 }
 
-function showAttachOrgModal(serverData, orgData) {
+function showAttachOrgModal(orgData, serverData) {
     if (!orgData.length) {
         alert("No organizations found, you must add organization before you can attach it!");
         return;
@@ -366,7 +366,7 @@ function showAttachOrgModal(serverData, orgData) {
 
     $("#form").off().on("submit", function (event) {
         event.preventDefault();
-        submitAttachOrg();
+        attachOrg({});
     });
 
     $("#modal").modal("show");
@@ -413,8 +413,8 @@ function showDeleteServersModal() {
     $("#modal").modal("show");
 }
 
-function showUserLinksModal(data) {
-    if (typeof data !== 'object' || Array.isArray(data)) {
+function showUserLinksModal({apiData}) {
+    if (typeof apiData !== 'object' || Array.isArray(apiData)) {
         alert("error: data variable must be object containing user's link data in key value pairs");
         return;
     }
@@ -423,23 +423,23 @@ function showUserLinksModal(data) {
     $("#modal-body").html(
         `<div class="mb-3">
             <label for="form-input-name" class="form-label">Temporary url to download profile, expires after 24 hours</label>
-            <input type="text" readonly value="${data.base_url + data.key_url}" class="form-control">
+            <input type="text" readonly value="${apiData.base_url + apiData.key_url}" class="form-control">
         </div>
         <div class="mb-3">
             <label for="form-input-name" class="form-label">Temporary url to download zip profile, expires after 24 hours</label>
-            <input type="text" readonly value="${data.base_url + data.key_zip_url}" class="form-control">
+            <input type="text" readonly value="${apiData.base_url + apiData.key_zip_url}" class="form-control">
         </div>
         <div class="mb-3">
             <label for="form-input-name" class="form-label">Temporary url to download Chromebook profile, expires after 24 hours</label>
-            <input type="text" readonly value="${data.base_url + data.key_onc_url}" class="form-control">
+            <input type="text" readonly value="${apiData.base_url + apiData.key_onc_url}" class="form-control">
         </div>
         <div class="mb-3">
             <label for="form-input-name" class="form-label">Temporary url to view profile links, expires after 24 hours</label>
-            <input type="text" readonly value="${data.base_url + data.view_url}" class="form-control">
+            <input type="text" readonly value="${apiData.base_url + apiData.view_url}" class="form-control">
         </div>
         <div class="mb-3">
             <label for="form-input-name" class="form-label">Temporary uri link for Pritunl Client, expires after 24 hours</label>
-            <input type="text" readonly value="pritunl${data.base_url.substring(data.base_url.indexOf(':')) + data.uri_url}" class="form-control">
+            <input type="text" readonly value="pritunl${apiData.base_url.substring(apiData.base_url.indexOf(':')) + apiData.uri_url}" class="form-control">
         </div>`
     )
     $("#modal-footer").html(`<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`);

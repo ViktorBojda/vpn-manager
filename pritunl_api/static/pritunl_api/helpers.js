@@ -81,43 +81,43 @@ function parseFormData() {
     return data;
 }
 
-function rebuildElements(elmData, elmPrefix, containerSelector, elmTemplate, callbackFuncs = []) {
-    let container = $(containerSelector);
+function rebuildElements({apiData, prefix, contSelector, template, callbacks = []}) {
+    const container = $(contSelector);
     
     // Check if the existing element's ID is in the array of element data, if not remove it
     container.children().filter(function() {
         const childId = $(this).attr('id');
-        const hasId = elmData.some(function(data) {
-            return `${elmPrefix}-${data.id}` == childId;
+        const hasId = apiData.some(function(data) {
+            return `${prefix}-${data.id}` == childId;
         });
         return !hasId;
     }).remove();
     
     // Check whether element exists, if it does update it, if not create new one
-    elmData.forEach((data, idx) => {
-        let elm = container.find(`#${elmPrefix}-${data.id}`);
+    apiData.forEach((data, idx) => {
+        let elm = container.find(`#${prefix}-${data.id}`);
         if (elm.length)
-            $.each(data, (key, value) => elm.find(`.${elmPrefix}-data-${key}`).text(value));
+            $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value));
         else {
-            elm = $(elmTemplate(data));
+            elm = $(template(data));
             container.append(elm);
         }
 
         elm.css('order', idx);
     });
 
-    callbackFuncs.forEach(func => {
+    callbacks.forEach(callback => {
         // If obj is Array, take first element as function and assign the rest of array as it's parameters
-        if (Array.isArray(func)) {
-            const callback = func.shift();
-            callback(elmData, ...func)
+        if (Array.isArray(callback)) {
+            const func = callback.shift();
+            func(apiData, ...callback)
         }
         else {
             // Check whether function needs parameters
-            if (func.length)
-                func(elmData);
+            if (callback.length)
+                callback(apiData);
             else 
-                func();
+                callback();
         }
     });
 }

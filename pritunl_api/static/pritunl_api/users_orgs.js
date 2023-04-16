@@ -15,7 +15,7 @@ const userTemplate = (userData) =>
     </li>`;
 
 function deleteSelected(selected, url) {
-    let ajaxCalls = []
+    const ajaxCalls = []
     selected.each(function () {
         let destUrl = url;
         $(this).val().split(",").forEach(ID => destUrl = destUrl.replace("%s", ID))
@@ -40,46 +40,61 @@ function deleteAllSelected(orgs, users) {
     return ajaxCalls;
 }
 
-function submitAddOrg() {
-    let data = parseFormData();
-    createOrg(data);
+function addOrg() {
+    const data = parseFormData();
+    createOrgApi({
+        data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitEditOrg() {
-    let data = parseFormData();
-    updateOrg(data.id, data);
+function editOrg() {
+    const data = parseFormData();
+    updateOrgApi({
+        orgID: data.id, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitBulkAddUsers() {
-    let data = parseFormData();
-    let userList = [];
+function bulkAddUsers() {
+    const data = parseFormData();
+    const userList = [];
 
-    let lines = data.user_list.split("\n");
+    const lines = data.user_list.split("\n");
     for (let i = 0; i < lines.length; i++) {
         if (lines[i].trim() === "")
             continue;
         
-        let values = lines[i].split(",");
-        let name = values[0].trim();
-        let email = values[1] ? values[1].trim() : "";
+        const values = lines[i].split(",");
+        const name = values[0].trim();
+        const email = values[1] ? values[1].trim() : "";
 
         userList.push({ name: name, email: email });
     }
-    bulkCreateUsers(data.organization, {'user_list': userList});
+    bulkCreateUsersApi({
+        orgID: data.organization, data: {'user_list': userList},
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitAddUser() {
-    let data = parseFormData();
+function addUser() {
+    const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
-    createUser(data.organization, data)
+    createUserApi({
+        orgID: data.organization, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitEditUser() {
-    let data = parseFormData();
+function editUser() {
+    const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
-    updateUser(data.organization, data.id, data);
+    updateUserApi({
+        orgID: data.organization, userID: data.id, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
 function configureNavbarBtns(orgData) {
@@ -100,21 +115,35 @@ function configureUserList(userData) {
             return;
         }
         $(`#org-${data.organization} #user-${data.id} .user-links-btn`)
-            .off('click').on('click', () => fetchUserLinks(data.organization, data.id, [showUserLinksModal]));
+            .off('click').on('click', () => fetchUserLinksApi({
+                orgID: data.organization, userID: data.id,
+                doneCallbacks: [{func: showUserLinksModal}]}));
     });
 }
 
 function rebuildUsersByOrgID(orgID) {
-    fetchUsersByOrgID(
-        orgID, 
-        [rebuildElements, 'user', `#org-${orgID} .user-list`, userTemplate, 
-            [configureUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]]);
+    fetchUsersByOrgIdApi({
+        orgID: orgID,
+        doneCallbacks: [{
+            func: rebuildElements,
+            args: {
+                prefix: 'user', contSelector: `#org-${orgID} .user-list`, template: userTemplate, 
+                callbacks: [configureUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]
+            }
+        }]
+    });
 }
 
 function rebuildOrgs() {
-    return fetchOrgs(
-        [rebuildElements, 'org', '#orgs-container', orgTemplate, 
-            [configureNavbarBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]]);
+    return fetchOrgsApi({
+        doneCallbacks: [{
+            func: rebuildElements,
+            args: {
+                prefix: 'org', contSelector: '#orgs-container', template: orgTemplate, 
+                callbacks: [configureNavbarBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]
+            }
+        }]
+    });
 }
 
 function fetchAllData() {

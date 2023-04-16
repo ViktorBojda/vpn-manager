@@ -4,14 +4,16 @@ const createSettings = (method, data = null) => {
     return settings;
 }
 
-function apiCall({path, settings = {type: 'GET'}, doneCallback = [], passDoneData = true, failCallback = [], alwaysCallback = []}) {
+function apiCall({path, settings = {type: 'GET'}, doneCallbacks = [], failCallbacks = [], alwaysCallbacks = []}) {
     return $.ajax(urlBase + path, settings)
-    .done((data) => {
-        if (doneCallback.length) {
-            const callback = doneCallback.shift();
-            (passDoneData) ? callback(data, ...doneCallback) : callback(...doneCallback);
-        }
-        return data;
+    .done((apiData) => {
+        $.each(doneCallbacks, (_, callback) => {
+            if (!'func' in callback) return;
+            'args' in callback ? '' : callback.args = {};
+            callback.args.apiData = apiData;
+            callback.func(callback.args);
+        });
+        return apiData;
     })
     .fail((jqXHR) => {
         let err;
@@ -20,101 +22,101 @@ function apiCall({path, settings = {type: 'GET'}, doneCallback = [], passDoneDat
             return false;
         });
         alert(err.message);
-        if (failCallback.length) {
-            const callback = failCallback.shift();
-            callback(err, ...failCallback);
-        }
+        $.each(failCallbacks, (_, callback) => {
+            'args' in callback ? '' : callback.args = {};
+            callback.args.err = err;
+            callback.func(callback.args);
+        });
     })
     .always(() => {
-        if (alwaysCallback.length) {
-            const callback = alwaysCallback.shift();
-            callback(...alwaysCallback);
-        }
+        $.each(alwaysCallbacks, (_, callback) => {
+            'args' in callback ? '' : callback.args = {};
+            callback.func(callback.args);
+        });
     })
 }
 
-function fetchOrgs(doneCallback = []) {
-    return apiCall({path: 'organizations/', doneCallback: doneCallback});
+function fetchOrgsApi({doneCallbacks = []}) {
+    return apiCall({path: 'organizations/', doneCallbacks: doneCallbacks});
 }
 
-function createOrg(data) {
+function createOrgApi({data, doneCallbacks = []}) {
     return apiCall(
-        {path: 'organizations/create/', settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: 'organizations/create/', settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function updateOrg(orgID, data) {
+function updateOrgApi({orgID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `organizations/${orgID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `organizations/${orgID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function fetchUsersByOrgID(orgID, doneCallback = []) {
-    return apiCall({path: `organizations/${orgID}/users/`, doneCallback: doneCallback});
+function fetchUsersByOrgIdApi({orgID, doneCallbacks = []}) {
+    return apiCall({path: `organizations/${orgID}/users/`, doneCallbacks: doneCallbacks});
 }
 
-function fetchUserLinks(orgID, userID, doneCallback = []) {
-    return apiCall({path: `organizations/${orgID}/users/${userID}/links/`, doneCallback: doneCallback});
+function fetchUserLinksApi({orgID, userID, doneCallbacks = []}) {
+    return apiCall({path: `organizations/${orgID}/users/${userID}/links/`, doneCallbacks: doneCallbacks});
 }
 
-function createUser(orgID, data) {
+function createUserApi({orgID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `organizations/${orgID}/users/create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `organizations/${orgID}/users/create/`, settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function bulkCreateUsers(orgID, data) {
+function bulkCreateUsersApi({orgID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `organizations/${orgID}/users/bulk-create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `organizations/${orgID}/users/bulk-create/`, settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function updateUser(orgID, userID, data) {
+function updateUserApi({orgID, userID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `organizations/${orgID}/users/${userID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `organizations/${orgID}/users/${userID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function fetchServers(doneCallback = []) {
-    return apiCall({path: 'servers/', doneCallback: doneCallback});
+function fetchServersApi({doneCallbacks = []}) {
+    return apiCall({path: 'servers/', doneCallbacks: doneCallbacks});
 }
 
-function fetchAttachedOrgsByServerID(serverID, doneCallback = []) {
-    return apiCall({path: `servers/${serverID}/organizations/`, doneCallback: doneCallback});
+function fetchAttachedOrgsByServerIdApi({serverID, doneCallbacks = []}) {
+    return apiCall({path: `servers/${serverID}/organizations/`, doneCallbacks: doneCallbacks});
 }
 
-function createServer(data) {
+function createServerApi({data, doneCallbacks = []}) {
     return apiCall(
-        {path: 'servers/create/', settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: 'servers/create/', settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function updateServer(serverID, data) {
+function updateServerApi({serverID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `servers/${serverID}/update/`, settings: createSettings('PUT', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `servers/${serverID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks}
     );
 }
 
-function controlServer(serverID, action, doneCallback = [], alwaysCallback = []) {
-    console.log("HERE: " + action);
+function controlServerApi({serverID, action, doneCallbacks = [], alwaysCallbacks = []}) {
     return apiCall(
-        {path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), doneCallback: doneCallback, passDoneData: false, alwaysCallback: alwaysCallback}
+        {path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), doneCallbacks: doneCallbacks, alwaysCallbacks: alwaysCallbacks}
     );
 }
 
-function attachOrg(serverID, orgID, doneCallback = [], failCallback = []) {
+function attachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []}) {
     return apiCall(
         {path: `servers/${serverID}/organizations/${orgID}/attach/`, settings: createSettings('PUT'),
-        doneCallback: doneCallback, passDoneData: false, failCallback: failCallback}
+        doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}
     );
 }
 
-function fetchRoutesByServerID(serverID, doneCallback = []) {
-    return apiCall({path: `servers/${serverID}/routes/`, doneCallback: doneCallback});
+function fetchRoutesByServerIdApi({serverID, doneCallbacks = []}) {
+    return apiCall({path: `servers/${serverID}/routes/`, doneCallbacks: doneCallbacks});
 }
 
-function createRoute(serverID, data) {
+function createRouteApi({serverID, data, doneCallbacks = []}) {
     return apiCall(
-        {path: `servers/${serverID}/routes/create/`, settings: createSettings('POST', data), doneCallback: [() => $("#modal").modal("hide")]}
+        {path: `servers/${serverID}/routes/create/`, settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
     );
 }

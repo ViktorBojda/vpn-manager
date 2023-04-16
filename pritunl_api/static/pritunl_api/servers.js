@@ -66,45 +66,83 @@ function deleteAllSelected(servers, routes, orgs) {
     return ajaxCalls;
 }
 
-function stopServerAndRepeat(err, serverID, repeatCallback) {
+function stopServerAndRepeat({err, serverID, repeatCallbacks}) {
     const errors = ['server_not_offline', 'server_route_online']
     if (errors.includes(err.code))
-        controlServer(serverID, 'stop', repeatCallback);
+        controlServerApi({
+            serverID: serverID, action: 'stop',
+            doneCallbacks: repeatCallbacks
+        });
 }
 
-function submitAttachOrg() {
+function attachOrg({startServer = false}) {
     const data = parseFormData();
-    attachOrg(data.server, data.organization, [],
-        [stopServerAndRepeat, data.server, // failCallback of attachOrg
-            [attachOrg, data.server, data.organization, // repeatCallback of stopServerAndRepeat
-                [controlServer, data.server, 'start']]]); // doneCallback of attachOrg
+    attachOrgApi({
+        serverID: data.server, orgID: data.organization,
+        doneCallbacks: [
+            {func: () => $("#modal").modal("hide")},
+            startServer ? {func: controlServer, args: {serverID: data.server, action: 'start'}} : {}
+        ],
+        failCallbacks: [{
+            func: stopServerAndRepeat,
+            args: {
+                serverID: data.server,
+                repeatCallbacks: [{
+                    func: attachOrg,
+                    args: {startServer: true}
+                }]
+            }
+        }]
+    });
 }
 
-function submitAddRoute() {
+function addRoute() {
     const data = parseFormData();
-    createRoute(data.server, data);
+    createRouteApi({
+        serverID: data.server, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitAddServer() {
+function addServer() {
     const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
-    createServer(data);
+    createServerApi({
+        data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
-function submitEditServer() {
+function editServer() {
     const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
-    updateServer(data.id, data);
+    updateServerApi({
+        serverID: data.id, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
 }
 
 function rebuildAttachedOrgsByServerID(serverID) {
-    fetchAttachedOrgsByServerID(serverID, [(data) => {
-        const startBtn = $(`#server-${serverID} .server-start-btn`);
-        data.length ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
-        rebuildElements(data, 'org', `#server-${serverID} .org-list`, orgTemplate, [checkForCheckBoxes]);
-    }]);
+    fetchAttachedOrgsByServerIdApi({
+        serverID: serverID,
+        doneCallbacks: [
+            {
+                func: ({apiData}) => {
+                    const startBtn = $(`#server-${serverID} .server-start-btn`);
+                    apiData.length ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
+                }
+            },
+            {
+                func: rebuildElements,
+                args: {
+                    prefix: 'org', contSelector: `#server-${serverID} .org-list`, template: orgTemplate,
+                    callbacks: [checkForCheckBoxes]
+                }
+            }
+        ]
+    });
 }
 
 function delCheckboxForVirtualNetwork(routeData) {
@@ -115,28 +153,45 @@ function delCheckboxForVirtualNetwork(routeData) {
 } 
 
 function rebuildRoutesByServerID(serverID) {
-    fetchRoutesByServerID(
-        serverID, 
-        [rebuildElements, 'route', `#server-${serverID} .route-list`, routeTemplate, 
-            [delCheckboxForVirtualNetwork, checkForCheckBoxes]]);
+    fetchRoutesByServerIdApi({
+        serverID: serverID,
+        doneCallbacks: [{
+            func: rebuildElements,
+            args: {
+                prefix: 'route', contSelector: `#server-${serverID} .route-list`, template: routeTemplate,
+                callbacks: [delCheckboxForVirtualNetwork, checkForCheckBoxes]
+            }
+        }]
+    });
 }
 
-function configureServerBtns(serverID, action, button) {
+function controlServer({serverID, action}) {
     const actions = ['start', 'restart', 'stop'];
     if (!actions.includes(action)) {
         console.error('Invalid action: ' + action);
         return;
     }
-    $(button).prop('disabled', true);
-    controlServer(serverID, action, [], [(btn) => $(btn).prop('disabled', false), button]);
+    const btn = $(`#server-${serverID} .server-${action}-btn`).prop('disabled', true);
+    controlServerApi({
+        serverID: serverID, action: action,
+        alwaysCallbacks: [{
+            func: ({btn}) => $(btn).prop('disabled', false),
+            args: {btn}
+        }]
+    });
 }
 
 function refreshAttachOrgModal() {
     // Refresh org list inside of attach org modal
     const serverData = $('#servers-container').data('serverData');
-    fetchOrgs(
-        [(orgData, serverData) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(serverData, orgData)),
-        serverData]);
+    fetchOrgsApi({
+        doneCallbacks: [
+            {
+                func: ({apiData, serverData}) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)),
+                args: {serverData}
+            }
+        ]
+    });
 }
 
 function toggleBtns(serverData) {
@@ -153,9 +208,9 @@ function toggleBtns(serverData) {
     refreshAttachOrgModal();
 
     serverData.forEach(server => {
-        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'start', ev.target));
-        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'restart', ev.target));
-        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', ev => configureServerBtns(server.id, 'stop', ev.target));
+        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'start'}));
+        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'restart'}));
+        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'stop'}));
 
         if (server.status == "online") {
             startTimer(`#server-${server.id} .server-uptime`, server.uptime);
@@ -173,9 +228,15 @@ function toggleBtns(serverData) {
 }
 
 function rebuildServers() {
-    return fetchServers(
-        [rebuildElements, 'server', '#servers-container', serverTemplate, 
-            [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]]);
+    return fetchServersApi({
+        doneCallbacks: [{
+            func: rebuildElements,
+            args: {
+                prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
+                callbacks: [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]
+            }
+        }]
+    });
 }
 
 function fetchAllData() {
