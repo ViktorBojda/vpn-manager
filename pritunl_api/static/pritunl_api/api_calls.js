@@ -8,7 +8,7 @@ function apiCall({path, settings = {type: 'GET'}, doneCallbacks = [], failCallba
     return $.ajax(urlBase + path, settings)
     .done((apiData) => {
         $.each(doneCallbacks, (_, callback) => {
-            if (!'func' in callback) return;
+            if (!('func' in callback)) return;
             'args' in callback ? '' : callback.args = {};
             callback.args.apiData = apiData;
             callback.func(callback.args);
@@ -82,6 +82,10 @@ function fetchServersApi({doneCallbacks = []}) {
     return apiCall({path: 'servers/', doneCallbacks: doneCallbacks});
 }
 
+function fetchServerApi({serverID, doneCallbacks = []}) {
+    return apiCall({path: `servers/${serverID}/`, doneCallbacks: doneCallbacks});
+}
+
 function fetchAttachedOrgsByServerIdApi({serverID, doneCallbacks = []}) {
     return apiCall({path: `servers/${serverID}/organizations/`, doneCallbacks: doneCallbacks});
 }
@@ -110,6 +114,12 @@ function controlServerApi({serverID, action, doneCallbacks = [], alwaysCallbacks
     );
 }
 
+function deleteRoutesAndOrgsApi({serverID, data}) {
+    return apiCall(
+        {path: `servers/${serverID}/entities/delete/`, settings: createSettings('DELETE', data)}
+    );
+}
+
 function attachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []}) {
     return apiCall(
         {path: `servers/${serverID}/organizations/${orgID}/attach/`, settings: createSettings('PUT'),
@@ -117,11 +127,11 @@ function attachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []})
     );
 }
 
-function detachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []}) {
-    return apiCall(
-        {path: `servers/${serverID}/organizations/${orgID}/detach/`, settings: createSettings('DELETE'), doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}
-    );
-}
+// function detachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []}) {
+//     return apiCall(
+//         {path: `servers/${serverID}/organizations/${orgID}/detach/`, settings: createSettings('DELETE'), doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}
+//     );
+// }
 
 function fetchRoutesByServerIdApi({serverID, doneCallbacks = []}) {
     return apiCall({path: `servers/${serverID}/routes/`, doneCallbacks: doneCallbacks});
@@ -133,8 +143,8 @@ function createRouteApi({serverID, data, doneCallbacks = [], failCallbacks = []}
     );
 }
 
-function deleteRouteApi({serverID, routeID}) {
-    return apiCall(
-        {path: `servers/${serverID}/routes/${routeID}/delete/`, settings: createSettings('DELETE')}
-    );
-}
+// function deleteRouteApi({serverID, routeID}) {
+//     return apiCall(
+//         {path: `servers/${serverID}/routes/${routeID}/delete/`, settings: createSettings('DELETE')}
+//     );
+// }

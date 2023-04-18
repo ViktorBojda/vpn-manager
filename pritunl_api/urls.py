@@ -135,6 +135,11 @@ server_patterns = [
         name="servers-organizations-attach",
     ),
     path(
+        "<str:server_id>/entities/delete/",
+        views.ServerDeleteEntitiesApi.as_view(),
+        name="servers-entities-delete",
+    ),
+    path(
         "<str:server_id>/organizations/<str:org_id>/detach/",
         views.ServerDetachOrganizationApi.as_view(),
         name="servers-organizations-detach",

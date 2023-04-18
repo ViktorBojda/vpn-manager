@@ -6,13 +6,28 @@ from rest_framework.serializers import (
     CharField,
     IntegerField,
     ChoiceField,
-    ListField
+    ListField,
 )
 
 from pritunl_api.pritunl_request import auth_request
-from pritunl_api.selectors.servers import get_all_servers, get_server_by_id, get_server_orgs, get_server_output
+from pritunl_api.selectors.servers import (
+    get_all_servers,
+    get_server_by_id,
+    get_server_orgs,
+    get_server_output,
+)
 from pritunl_api.serializers import ServerSerializer
-from pritunl_api.services.servers import attach_org_to_server, create_server, delete_server, detach_org_from_server, restart_server, start_server, stop_server, update_server
+from pritunl_api.services.servers import (
+    attach_org_to_server,
+    create_server,
+    delete_entities,
+    delete_server,
+    detach_org_from_server,
+    restart_server,
+    start_server,
+    stop_server,
+    update_server,
+)
 from pritunl_api.validators import validate_ipv4_network_address
 
 
@@ -83,13 +98,14 @@ class ServerDeleteApi(APIView):
     def delete(self, request, server_id) -> Response:
         delete_server(server_id)
 
-        return Response(status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ServerStartApi(APIView):
     """
     Starts server.
     """
+
     def put(self, request, server_id) -> Response:
         data = start_server(server_id=server_id)
 
@@ -100,6 +116,7 @@ class ServerStopApi(APIView):
     """
     Stops server.
     """
+
     def put(self, request, server_id) -> Response:
         data = stop_server(server_id=server_id)
 
@@ -110,6 +127,7 @@ class ServerRestartApi(APIView):
     """
     Restarts server.
     """
+
     def put(self, request, server_id) -> Response:
         data = restart_server(server_id=server_id)
 
@@ -186,6 +204,29 @@ class ServerHostListApi(APIView):
         return Response(data=response.json(), status=status.HTTP_200_OK)
 
 
+class ServerDeleteEntitiesApi(APIView):
+    """
+    Deletes routes or detaches organizations specified by their IDs
+    """
+
+    class InputSerializer(Serializer):
+        class EntitySerializer(Serializer):
+            entity_type = ChoiceField(
+                choices=[("route", "route"), ("organization", "organization")]
+            )
+            entity_id = CharField()
+
+        entities = ListField(child=EntitySerializer(), allow_empty=False)
+
+    def delete(self, request, server_id) -> Response:
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        delete_entities(server_id=server_id, **serializer.data)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class EventApi(APIView):
     """
     Returns list of events
@@ -194,8 +235,6 @@ class EventApi(APIView):
     def get(self, request) -> Response:
         event_id: str = request.query_params.get("id", None)
         path = f"/event/{event_id}" if event_id else "/event"
-        response = auth_request(
-            method="GET", path=path, raise_err=True
-        )
+        response = auth_request(method="GET", path=path, raise_err=True)
 
         return Response(data=response.json(), status=status.HTTP_200_OK)

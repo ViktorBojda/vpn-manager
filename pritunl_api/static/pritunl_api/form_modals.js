@@ -376,24 +376,24 @@ function showDeleteServersModal() {
     const servers = $(".server-check:checked");
     const routes = $(".route-check:checked:not(:disabled)");
     const orgs = $(".org-check:checked:not(:disabled)");
+    const routesOrgsData = {};
+    const itemList = $("<ul>");
 
-    const delData = {};
+    servers.each((_, server) => itemList.append($(`<li>${$(server).siblings(".server-data-name").text()}</li>`)));
     routes.each((_, route) => {
-        let serverID = $(route).data('serverID');
-        serverID in delData ? '' : delData[serverID] = {routes: [], orgs: []};
-        delData[serverID]['routes'].push($(route).data('id'));
+        const serverID = $(route).data('serverID');
+        const routeID = $(route).data('id');
+        serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
+        routesOrgsData[serverID]['entities'].push({entity_type: 'route', entity_id: routeID});
+        itemList.append($(`<li>${$(route).siblings(".route-data-network").text()}</li>`));
     });
     orgs.each((_, org) => {
-        let serverID = $(org).data('serverID');
-        serverID in delData ? '' : delData[serverID] = {routes: [], orgs: []};
-        delData[serverID]['orgs'].push($(org).data('id'));
+        const serverID = $(org).data('serverID');
+        const orgID = $(org).data('id');
+        serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
+        routesOrgsData[serverID]['entities'].push({entity_type: 'organization', entity_id: orgID});
+        itemList.append($(`<li>${$(org).siblings(".org-data-name").text()}</li>`));
     });
-    console.log(delData);
-
-    const itemList = $("<ul>");
-    servers.each((_, server) => itemList.append($(`<li>${$(server).siblings(".server-data-name").text()}</li>`)));
-    routes.each((_, route) => itemList.append($(`<li>${$(route).siblings(".route-data-network").text()}</li>`)));
-    orgs.each((_, org) => itemList.append($(`<li>${$(org).siblings(".org-data-name").text()}</li>`)));
 
     $("#modal-header").text("Delete Selected");
     $("#modal-body").html(
@@ -405,12 +405,7 @@ function showDeleteServersModal() {
         <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
     )
 
-    $("#modal-btn-del").off('click').on("click", function() {
-        // $.when.apply($, deleteAllSelected(servers, routes, orgs)).then(function() {
-        //     $("#modal").modal("hide");
-        // });
-    });
-
+    $("#modal-btn-del").off('click').on("click", () => deleteSelected(servers, routesOrgsData));
     $("#modal").modal("show");
 }
 

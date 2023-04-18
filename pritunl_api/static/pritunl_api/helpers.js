@@ -43,11 +43,11 @@ function parseEvents(events) {
                 break;
 
             case "server_routes_updated": // route => [create, update, delete], server => [update], org => [attach, detach]
-                ifExistsCall('fetchRoutesByServerID', event.resource_id);
+                ifExistsCall('rebuildRoutesByServerID', event.resource_id);
                 break;
 
             case "server_organizations_updated": // org => [attach, detach, delete]
-                ifExistsCall('fetchAttachedOrgsByServerID', event.resource_id);
+                ifExistsCall('rebuildAttachedOrgsByServerID', event.resource_id);
                 ifExistsCall('fetchOrgs');
                 break;
 

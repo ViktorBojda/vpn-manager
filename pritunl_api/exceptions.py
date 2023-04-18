@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 class PritunlAPIException(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = 'Something went wrong.'
     default_code = 'error'
 
@@ -12,8 +13,8 @@ class PritunlAPIException(APIException):
             detail = self.default_detail
         if code is None:
             code = self.default_code
-        if status_code is None:
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        if status_code is not None:
+            self.status_code = status_code
         super().__init__(detail, code)
 
 def pritunl_exception_handler(exc, context):

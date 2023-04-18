@@ -11,7 +11,12 @@ from rest_framework.serializers import (
 
 from pritunl_api.selectors.users import get_all_users, get_user_by_id, get_user_links
 from pritunl_api.serializers import UserSerializer
-from pritunl_api.services.users import bulk_create_user, create_user, delete_user, update_user
+from pritunl_api.services.users import (
+    bulk_create_user,
+    create_user,
+    delete_user,
+    update_user,
+)
 
 
 class UserCreateApi(APIView):
@@ -45,7 +50,6 @@ class UserBulkCreateApi(APIView):
             email = EmailField(required=False, allow_blank=True)
 
         user_list = ListField(child=NameEmailSerializer(), allow_empty=False)
-
 
     def post(self, request, org_id) -> Response:
         serializer = self.InputSerializer(data=request.data)
@@ -107,7 +111,7 @@ class UserDeleteApi(APIView):
         delete_user(user_id=user_id, org_id=org_id)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class UserLinksApi(APIView):
     """
@@ -116,6 +120,6 @@ class UserLinksApi(APIView):
 
     def get(self, request, org_id, user_id) -> Response:
         data = get_user_links(user_id=user_id, org_id=org_id)
-        data['base_url'] = settings.BASE_URL
+        data["base_url"] = settings.BASE_URL
 
         return Response(data, status.HTTP_200_OK)

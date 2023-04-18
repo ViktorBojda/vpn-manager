@@ -2,7 +2,7 @@ const urlBase = "/pritunl/api/";
 const serverTemplate = (serverData) =>
     `<div id=server-${serverData.id} class='card my-3 server-wrapper'>
         <div class='card-header server-header'>
-            <input class="form-check-input server-check" type="checkbox" name="checkbox" value="${serverData.id}" aria-label="Select checkbox">
+            <input class="form-check-input server-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
             <span class="server-data-name">${serverData.name}</span>
             <button type="button" disabled class="btn btn-success server-start-btn ms-3">Start Server</button>
             <button type="button" class="btn btn-primary server-restart-btn ms-3">Restart Server</button>
@@ -28,56 +28,22 @@ const serverTemplate = (serverData) =>
     </div>`;
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item route-item">
-        <input class="form-check-input route-check" type="checkbox" name="checkbox" value="${routeData.server},${routeData.id}" aria-label="Select checkbox">
+        <input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
         <span class="route-data-network">${routeData.network}</span>
     </li>`;
 const orgTemplate = (orgData) => 
     `<li id="org-${orgData.id}" class="list-group-item org-item">
-        <input class="form-check-input org-check" type="checkbox" name="checkbox" value="${orgData.server},${orgData.id}" aria-label="Select checkbox">
+        <input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
         <span class="org-data-name">${orgData.name}</span>
     </li>`;
 
-
-function deleteSelected(selected, url) {
-    let ajaxCalls = []
-    selected.each(function() {
-        let destUrl = url;
-        $(this).val().split(",").forEach(ID => destUrl = destUrl.replace("%s", ID))
-        ajaxCalls.push(
-            $.ajax({
-                type: "DELETE",
-                url: urlBase + destUrl
-            }).fail(function (xhr) {
-                alert(xhr.responseText);
-            })
-        );
-    });
-    return ajaxCalls;
-}
-
-function deleteAllSelected(servers, routes, orgs) {
-    // let ajaxCalls = [];
-    // servers.each((_, server) => ajaxCalls.push(deleteServerApi({serverID: server.data('id')})));
-    // routes.each((_, route) => ajaxCalls.push(deleteRouteApi({serverID: route.data('serverID'), routeID: route.data('id')})));
-    // orgs.each((_, org) => ajaxCalls.push(detachOrgApi({serverID: org.data('serverID'), orgID: org.data('id')})));
-
-    // const ajaxCalls = orgs.map((org) => {return detachOrgApi({serverID: org.data('serverID'), orgID: org.data('id')})});
-    // $.when.apply($, deleteSelected(orgs, "servers/%s/organizations/%s/detach/"))
-    // .done((...data) => {
-    //     console.log(data);
-    // })
-    // .fail((...errs) => {
-    //     console.log(errs);
-    // }); 
-
-
-    // if (servers.length)
-    //     ajaxCalls = ajaxCalls.concat(deleteSelected(servers, "servers/%s/delete/"));
-    // if (routes.length)
-    //     ajaxCalls = ajaxCalls.concat(deleteSelected(routes, "servers/%s/routes/%s/delete/"));
-    // if (orgs.length)
-    //     ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "servers/%s/organizations/%s/detach/"));
-    // return ajaxCalls;
+function deleteSelected(servers, routesOrgs) {
+    const ajaxCalls = [];
+    servers.each((_, server) => ajaxCalls.push(deleteServerApi({serverID: $(server).data('id')})));
+    $.each(routesOrgs, (key, value) => ajaxCalls.push(deleteRoutesAndOrgsApi({serverID: key, data: value})));
+    $.when.apply($, ajaxCalls).then(function() {
+        $("#modal").modal("hide");
+    })
 }
 
 function stopServerAndRepeat({err, serverID, repeatCallbacks}) {
@@ -109,27 +75,6 @@ function attachOrg({startServer = false}) {
         }]
     });
 }
-
-// function detachOrgs({orgs, startServer = false}) {
-//     const ajaxCalls = orgs.map((org) => {return detachOrg({serverID: org.data('serverID'), orgID: org.data('id')})});
-//     $.when.apply($, ajaxCalls).then(function())
-// }
-
-// function detachOrg({serverID, orgID}) {
-//     detachOrgApi({
-//         serverID: serverID, orgID: orgID,
-//         failCallbacks: [{
-//             func: stopServerAndRepeat,
-//             args: {
-//                 serverID: data.server,
-//                 repeatCallbacks: [{
-//                     func: detachOrg,
-//                     args: {serverID: serverID, orgID: orgID}
-//                 }]
-//             }
-//         }]
-//     })
-// }
 
 function addRoute({startServer = false}) {
     const data = parseFormData();
@@ -302,7 +247,10 @@ function rebuildServers() {
             func: rebuildElements,
             args: {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
-                callbacks: [toggleBtns, [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes]
+                callbacks: [
+                    insertDataIntoCheckboxes, toggleBtns,
+                    [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes
+                ]
             }
         }]
     });
