@@ -290,7 +290,7 @@ function showAddEditServerModal(action, data = null) {
 
     $("#form").off('submit').on("submit", function (ev) {
         ev.preventDefault();
-        action === 'add' ? addServer() : editServer({});
+        action === 'add' ? addServer() : editServer();
     });
 
     $("#modal").modal("show");
@@ -324,7 +324,7 @@ function showAddRouteModal(serverData) {
 
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        addRoute({});
+        addRoute();
     });
 
     $("#modal").modal("show");
@@ -366,7 +366,7 @@ function showAttachOrgModal(orgData, serverData) {
 
     $("#form").off("submit").on("submit", function (event) {
         event.preventDefault();
-        attachOrg({});
+        attachOrg();
     });
 
     $("#modal").modal("show");

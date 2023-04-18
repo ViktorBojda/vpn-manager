@@ -46,54 +46,19 @@ function deleteSelected(servers, routesOrgs) {
     })
 }
 
-function stopServerAndRepeat({err, serverID, repeatCallbacks}) {
-    const errors = ['server_not_offline', 'server_route_online']
-    if (errors.includes(err.code))
-        controlServerApi({
-            serverID: serverID, action: 'stop',
-            doneCallbacks: repeatCallbacks
-        });
-}
-
-function attachOrg({startServer = false}) {
+function attachOrg() {
     const data = parseFormData();
     attachOrgApi({
         serverID: data.server, orgID: data.organization,
-        doneCallbacks: [
-            {func: () => $("#modal").modal("hide")},
-            startServer ? {func: controlServer, args: {serverID: data.server, action: 'start'}} : {}
-        ],
-        failCallbacks: [{
-            func: stopServerAndRepeat,
-            args: {
-                serverID: data.server,
-                repeatCallbacks: [{
-                    func: attachOrg,
-                    args: {startServer: true}
-                }]
-            }
-        }]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
     });
 }
 
-function addRoute({startServer = false}) {
+function addRoute() {
     const data = parseFormData();
     createRouteApi({
         serverID: data.server, data: data,
-        doneCallbacks: [
-            {func: () => $("#modal").modal("hide")},
-            startServer ? {func: controlServer, args: {serverID: data.server, action: 'start'}} : {}
-        ],
-        failCallbacks: [{
-            func: stopServerAndRepeat,
-            args: {
-                serverID: data.server,
-                repeatCallbacks: [{
-                    func: addRoute,
-                    args: {startServer: true}
-                }]
-            }
-        }]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
     });
 }
 
@@ -107,26 +72,13 @@ function addServer() {
     });
 }
 
-function editServer({startServer = false}) {
+function editServer() {
     const data = parseFormData();
     if ('groups' in data)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateServerApi({
         serverID: data.id, data: data,
-        doneCallbacks: [
-            {func: () => $("#modal").modal("hide")},
-            startServer ? {func: controlServer, args: {serverID: data.id, action: 'start'}} : {}
-        ],
-        failCallbacks: [{
-            func: stopServerAndRepeat,
-            args: {
-                serverID: data.id,
-                repeatCallbacks: [{
-                    func: editServer,
-                    args: {startServer: true}
-                }]
-            }
-        }]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
     });
 }
 
@@ -199,12 +151,10 @@ function refreshAttachOrgModal() {
     // Refresh org list inside of attach org modal
     const serverData = $('#servers-container').data('serverData');
     fetchOrgsApi({
-        doneCallbacks: [
-            {
-                func: ({apiData, serverData}) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)),
-                args: {serverData}
-            }
-        ]
+        doneCallbacks: [{
+            func: ({apiData, serverData}) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)),
+            args: {serverData}
+        }]
     });
 }
 
