@@ -77,6 +77,8 @@ function parseFormData() {
     formData.forEach((obj) => {
         if (obj.value.trim().length)
             data[obj.name] = obj.value;
+        else
+            data[obj.name] = null;
     });
     return data;
 }
@@ -97,7 +99,7 @@ function rebuildElements({apiData, prefix, contSelector, template, callbacks = [
     apiData.forEach((data, idx) => {
         let elm = container.find(`#${prefix}-${data.id}`);
         if (elm.length)
-            $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value));
+            $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value ? value : ''));
         else {
             elm = $(template(data));
             container.append(elm);
@@ -122,9 +124,14 @@ function rebuildElements({apiData, prefix, contSelector, template, callbacks = [
     });
 }
 
-function insertEditModal(elmData, elmPrefix, editModal) {
+function insertEditModal(elmData, prefix, clickSuffix, editModal, parentPrefix = null, parentKey = null) {
+    parentKey ? '' : parentKey = parentPrefix;
     elmData.forEach((data, _) => {
-        let $elmName = $(`#${elmPrefix}-${data.id} .${elmPrefix}-data-name`);
+        let $elmName;
+        if (parentPrefix)
+            $elmName = $(`#${parentPrefix}-${data[parentKey]} #${prefix}-${data.id} .${prefix}-data-${clickSuffix}`);
+        else
+            $elmName = $(`#${prefix}-${data.id} .${prefix}-data-${clickSuffix}`);
         if ($elmName.length)
             $elmName.off('click').on('click', () => editModal('edit', data));
     });

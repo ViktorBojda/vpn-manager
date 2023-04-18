@@ -139,12 +139,6 @@ function attachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []})
     );
 }
 
-// function detachOrgApi({serverID, orgID, doneCallbacks = [], failCallbacks = []}) {
-//     return apiCall(
-//         {path: `servers/${serverID}/organizations/${orgID}/detach/`, settings: createSettings('DELETE'), doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}
-//     );
-// }
-
 function fetchRoutesByServerIdApi({serverID, doneCallbacks = []}) {
     return apiCall({path: `servers/${serverID}/routes/`, doneCallbacks: doneCallbacks});
 }
@@ -155,8 +149,8 @@ function createRouteApi({serverID, data, doneCallbacks = [], failCallbacks = []}
     );
 }
 
-// function deleteRouteApi({serverID, routeID}) {
-//     return apiCall(
-//         {path: `servers/${serverID}/routes/${routeID}/delete/`, settings: createSettings('DELETE')}
-//     );
-// }
+function updateRouteApi({serverID, routeID, data, doneCallbacks = [], failCallbacks = []}) {
+    return apiCall(
+        {path: `servers/${serverID}/routes/${routeID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}
+    );
+}

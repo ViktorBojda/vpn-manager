@@ -89,9 +89,8 @@ class UserUpdateApi(APIView):
 
     class InputSerializer(Serializer):
         name = CharField(required=False)
-        email = EmailField(required=False)
-        groups = ListField(required=False, child=CharField(), allow_empty=False)
-        pin = CharField(required=False, min_length=6)  # TODO only numbers
+        email = EmailField(required=False, allow_blank=True, allow_null=True)
+        groups = ListField(required=False, child=CharField(), allow_empty=True, allow_null=True)
 
     def put(self, request, org_id, user_id) -> Response:
         serializer = self.InputSerializer(data=request.data)

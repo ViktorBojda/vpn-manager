@@ -62,7 +62,7 @@ function bulkAddUsers() {
 
 function addUser() {
     const data = parseFormData();
-    if ('groups' in data)
+    if ('groups' in data && data.groups != null)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     createUserApi({
         orgID: data.organization, data: data,
@@ -72,7 +72,7 @@ function addUser() {
 
 function editUser() {
     const data = parseFormData();
-    if ('groups' in data)
+    if ('groups' in data && data.groups != null)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateUserApi({
         orgID: data.organization, userID: data.id, data: data,
@@ -113,7 +113,7 @@ function rebuildUsersByOrgID(orgID) {
                 prefix: 'user', contSelector: `#org-${orgID} .user-list`, template: userTemplate, 
                 callbacks: [
                     configureUserList, [insertIDsIntoCheckboxes, 'user', 'org', 'organization'],
-                    [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes
+                    [insertEditModal, 'user', 'name', showAddEditUserModal, 'org', 'organization'], checkForCheckBoxes
                 ]
             }
         }]
@@ -128,7 +128,7 @@ function rebuildOrgs() {
                 prefix: 'org', contSelector: '#orgs-container', template: orgTemplate, 
                 callbacks: [
                     configureNavbarBtns, [insertIDsIntoCheckboxes, 'org'],
-                    [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes
+                    [insertEditModal, 'org', 'name', showAddEditOrgModal], checkForCheckBoxes
                 ]
             }
         }]

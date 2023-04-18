@@ -29,7 +29,8 @@ const serverTemplate = (serverData) =>
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item route-item">
         <input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-        <span class="route-data-network">${routeData.network}</span>
+        <span class="me-3 route-data-network">${routeData.network}</span>
+        <span class="route-data-comment">${routeData.comment ? routeData.comment : ''}</span>
     </li>`;
 const orgTemplate = (orgData) => 
     `<li id="org-${orgData.id}" class="list-group-item org-item">
@@ -62,9 +63,17 @@ function addRoute() {
     });
 }
 
+function editRoute() {
+    const data = parseFormData();
+    updateRouteApi({
+        serverID: data.server, routeID: data.id, data: data,
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
+}
+
 function addServer() {
     const data = parseFormData();
-    if ('groups' in data)
+    if ('groups' in data && data.groups != null)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     createServerApi({
         data: data,
@@ -74,7 +83,7 @@ function addServer() {
 
 function editServer() {
     const data = parseFormData();
-    if ('groups' in data)
+    if ('groups' in data && data.groups != null)
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateServerApi({
         serverID: data.id, data: data,
@@ -117,7 +126,10 @@ function rebuildRoutesByServerID(serverID) {
             func: rebuildElements,
             args: {
                 prefix: 'route', contSelector: `#server-${serverID} .route-list`, template: routeTemplate,
-                callbacks: [[insertIDsIntoCheckboxes, 'route', 'server'], delCheckboxForVirtualNetwork, checkForCheckBoxes]
+                callbacks: [
+                    [insertIDsIntoCheckboxes, 'route', 'server'], delCheckboxForVirtualNetwork,
+                    [insertEditModal, 'route', 'network', showAddEditRouteModal, 'server'], checkForCheckBoxes
+                ]
             }
         }]
     });
@@ -158,7 +170,7 @@ function toggleBtns(serverData) {
         console.log("No servers found, you must add server before you can attach organization!");
         return;
     }
-    $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddRouteModal(serverData));
+    $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddEditRouteModal('add', serverData));
     $('#servers-container').data('serverData', serverData);
     
     refreshAttachOrgModal();
@@ -191,7 +203,7 @@ function rebuildServers() {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
                 callbacks: [
                     [insertIDsIntoCheckboxes, 'server'], toggleBtns,
-                    [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes
+                    [insertEditModal, 'server', 'name', showAddEditServerModal], checkForCheckBoxes
                 ]
             }
         }]

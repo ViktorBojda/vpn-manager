@@ -69,8 +69,7 @@ function showAddEditUserModal(action, data) {
             </div>`
         );
     }
-
-    if (action === 'edit') {
+    else if (action === 'edit') {
         if (typeof data !== 'object' || Array.isArray(data)) {
             alert("error: when action is 'edit', data variable must be object containing user's data in key value pairs");
             return;
@@ -291,23 +290,63 @@ function showAddEditServerModal(action, data = null) {
     $("#modal").modal("show");
 }
 
-function showAddRouteModal(serverData) {
-    const serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
-    $.each(serverData, function (_, val) {
-        serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
-    });
+function showAddEditRouteModal(action, data) {
+    const actions = ['add', 'edit'];
+    if (!actions.includes(action)) {
+        console.error('Invalid action provided: ' + action);
+        return;
+    }
+
+    let serverDiv, networkDiv, hiddenInputs;
+    if (action === 'add') {
+        if (!Array.isArray(data) || !data.length) {
+            alert("error: when action is 'add', data variable must be non empty array containing data about servers");
+            return;
+        }
+        const serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
+        $.each(data, function (_, val) {
+            serverSelect.append($(`<option value=${val.id}>${val.name}</option>`));
+        });
+        serverDiv = $(
+            `<div class="mb-3">
+                <label for="form-input-org" class="form-label">Select a server</label>
+                ${serverSelect.prop("outerHTML")}
+            </div>`
+        );
+        networkDiv = $(
+            `<div class="mb-3">
+                <label for="form-input-network" class="form-label">Network</label>
+                <input type="text" class="form-control" id="form-input-network" name="network" required>
+            </div>`
+        )
+
+    }
+    else if (action === 'edit') {
+        if (typeof data !== 'object' || Array.isArray(data)) {
+            alert("error: when action is 'edit', data variable must be object containing route's data in key value pairs");
+            return;
+        }
+        $.each(data, (key, value) => {
+            if (value == null)
+                data[key] = '';
+        });
+        hiddenInputs = $(
+            `<div>
+                <input type='hidden' name='server' value=${data.server}></input>
+                <input type='hidden' name='id' value=${data.id}></input>
+            </div>`
+        );
+    }
 
     $("#modal-header").text("Add Route");
     $("#modal-body").html(
         `<form id="form">
+            ${(action === 'edit') ? '' : networkDiv.prop('outerHTML')}
             <div class="mb-3">
-                <label for="form-input-network" class="form-label">Network</label>
-                <input type="text" class="form-control" id="form-input-network" name="network" required>
+                <label for="form-input-comment" class="form-label">Comment</label>
+                <input type="text" value="${(action === 'edit') ? data.comment : ''}" class="form-control" id="form-input-comment" name="comment">
             </div>
-            <div class="mb-3">
-                <label for="form-input-server" class="form-label">Select a server</label>
-                ${serverSelect.prop("outerHTML")}
-            </div>
+            ${(action === 'edit') ? hiddenInputs.prop('outerHTML') : serverDiv.prop('outerHTML')}
         </form>`
     )
     $("#modal-footer").html(
@@ -319,7 +358,7 @@ function showAddRouteModal(serverData) {
 
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
-        addRoute();
+        action === 'add' ? addRoute() : editRoute();
     });
 
     $("#modal").modal("show");

@@ -62,6 +62,7 @@ class RouteUpdateApi(APIView):
 
     class InputSerializer(Serializer):
         network = CharField(required=False, validators=[validate_ipv4_network_address])
+        comment = CharField(required=False, allow_blank=True, allow_null=True)
 
     def put(self, request, route_id, server_id) -> Response:
         serializer = self.InputSerializer(data=request.data)

@@ -12,8 +12,8 @@ from pritunl_api.validators import validate_ipv4_network_address
 
 class UserSerializer(Serializer):
     name = CharField()
-    email = EmailField(required=False)
-    groups = ListField(required=False, child=CharField(), allow_empty=False)
+    email = EmailField(required=False, allow_blank=True, allow_null=True)
+    groups = ListField(required=False, child=CharField(), allow_empty=True, allow_null=True)
     pin = CharField(required=False, min_length=6)  # TODO only numbers
     # TODO yubico_id
     # TODO port_forwarding
@@ -41,7 +41,7 @@ class UserSerializer(Serializer):
 class ServerSerializer(Serializer):
     name = CharField()
     network = CharField(validators=[validate_ipv4_network_address])
-    groups = ListField(required=False, child=CharField(), allow_empty=False)
+    groups = ListField(required=False, child=CharField(), allow_empty=True, allow_null=True)
     port = IntegerField(min_value=1, max_value=65535)
     protocol = ChoiceField(choices=[("tcp", "tcp"), ("udp", "udp")])
     network_mode = ChoiceField(choices=[("tunnel", "tunnel"), ("bridge", "bridge")])
@@ -70,3 +70,4 @@ class ServerSerializer(Serializer):
 # "nat_netmap":"","net_gateway":false,"advertise":false,"vpc_region":null,"vpc_id":null}
 class RouteSerializer(Serializer):
     network = CharField(validators=[validate_ipv4_network_address])
+    comment = CharField(allow_blank=True, allow_null=True)
