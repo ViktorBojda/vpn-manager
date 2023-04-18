@@ -160,3 +160,14 @@ function stopTimer(selector) {
     elm.removeData('timer');
     elm.text('-');    
 }
+
+function insertIDsIntoCheckboxes(elmData, prefix, parentPrefix = null, parentKey = null) {
+    parentKey ? '' : parentKey = parentPrefix;
+    elmData.forEach(data => {
+        if (parentPrefix)
+            $(`#${parentPrefix}-${data[parentKey]} #${prefix}-${data.id} .${prefix}-check`)
+            .data(`${parentPrefix}ID`, data[parentKey]).data('id', data.id);
+        else
+            $(`#${prefix}-${data.id} .${prefix}-check`).data('id', data.id)
+    });
+}

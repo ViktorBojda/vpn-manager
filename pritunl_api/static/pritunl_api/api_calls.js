@@ -52,6 +52,12 @@ function updateOrgApi({orgID, data, doneCallbacks = []}) {
     );
 }
 
+function deleteOrgApi({orgID}) {
+    return apiCall(
+        {path: `organizations/${orgID}/delete/`, settings: createSettings('DELETE')}
+    );
+}
+
 function fetchUsersByOrgIdApi({orgID, doneCallbacks = []}) {
     return apiCall({path: `organizations/${orgID}/users/`, doneCallbacks: doneCallbacks});
 }
@@ -75,6 +81,12 @@ function bulkCreateUsersApi({orgID, data, doneCallbacks = []}) {
 function updateUserApi({orgID, userID, data, doneCallbacks = []}) {
     return apiCall(
         {path: `organizations/${orgID}/users/${userID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks}
+    );
+}
+
+function deleteUserApi({orgID, userID}) {
+    return apiCall(
+        {path: `organizations/${orgID}/users/${userID}/delete/`, settings: createSettings('DELETE')}
     );
 }
 

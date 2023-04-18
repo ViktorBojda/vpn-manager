@@ -181,12 +181,7 @@ function showDeleteUsersOrgsModal() {
         <button type="button" id="modal-btn-del"class="btn btn-danger">Delete</button>`
     )
 
-    $("#modal-btn-del").off().on("click", function () {
-        $.when.apply($, deleteAllSelected(orgs, users)).then(function () {
-            $("#modal").modal("hide");
-        });
-    });
-
+    $("#modal-btn-del").off().on("click", () => deleteSelected(orgs, users));
     $("#modal").modal("show");
 }
 

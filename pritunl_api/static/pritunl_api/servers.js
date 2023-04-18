@@ -96,7 +96,7 @@ function rebuildAttachedOrgsByServerID(serverID) {
                 func: rebuildElements,
                 args: {
                     prefix: 'org', contSelector: `#server-${serverID} .org-list`, template: orgTemplate,
-                    callbacks: [[insertDataIntoCheckboxes, 'org'], checkForCheckBoxes]
+                    callbacks: [[insertIDsIntoCheckboxes, 'org', 'server'], checkForCheckBoxes]
                 }
             }
         ]
@@ -110,14 +110,6 @@ function delCheckboxForVirtualNetwork(routeData) {
     });
 }
 
-function insertDataIntoCheckboxes(elmData, prefix = null) {
-    elmData.forEach(data => {
-        prefix ? 
-        $(`#server-${data.server} #${prefix}-${data.id} .${prefix}-check`).data('serverID', data.server).data('id', data.id) : 
-        $(`#server-${data.id} .server-check`).data('id', data.id)
-    });
-}
-
 function rebuildRoutesByServerID(serverID) {
     fetchRoutesByServerIdApi({
         serverID: serverID,
@@ -125,7 +117,7 @@ function rebuildRoutesByServerID(serverID) {
             func: rebuildElements,
             args: {
                 prefix: 'route', contSelector: `#server-${serverID} .route-list`, template: routeTemplate,
-                callbacks: [[insertDataIntoCheckboxes, 'route'], delCheckboxForVirtualNetwork, checkForCheckBoxes]
+                callbacks: [[insertIDsIntoCheckboxes, 'route', 'server'], delCheckboxForVirtualNetwork, checkForCheckBoxes]
             }
         }]
     });
@@ -198,7 +190,7 @@ function rebuildServers() {
             args: {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
                 callbacks: [
-                    insertDataIntoCheckboxes, toggleBtns,
+                    [insertIDsIntoCheckboxes, 'server'], toggleBtns,
                     [insertEditModal, 'server', showAddEditServerModal], checkForCheckBoxes
                 ]
             }

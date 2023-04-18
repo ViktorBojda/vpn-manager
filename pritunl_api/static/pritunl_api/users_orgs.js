@@ -2,42 +2,25 @@ const urlBase = "/pritunl/api/";
 const orgTemplate = (orgData) =>
     `<div id=org-${orgData.id} class='card my-3 org-wrapper'>
         <div class='card-header org-header'>
-            <input class="form-check-input org-check" type="checkbox" name="checkbox" value="${orgData.id}" aria-label="Select checkbox">
+            <input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
             <span class="org-data-name">${orgData.name}</span>
         </div>
         <ul class='list-group list-group-flush d-flex user-list'></ul>
     </div>`;
 const userTemplate = (userData) =>
     `<li id="user-${userData.id}" class="list-group-item user-item">
-        <input class="form-check-input user-check" type="checkbox" name="checkbox" value="${userData.organization},${userData.id}" aria-label="Select checkbox">
+        <input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
         <span class="user-data-name">${userData.name}</span>
         <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
     </li>`;
 
-function deleteSelected(selected, url) {
-    const ajaxCalls = []
-    selected.each(function () {
-        let destUrl = url;
-        $(this).val().split(",").forEach(ID => destUrl = destUrl.replace("%s", ID))
-        ajaxCalls.push(
-            $.ajax({
-                type: "DELETE",
-                url: urlBase + destUrl
-            }).fail(function (xhr) {
-                alert(xhr.responseText);
-            })
-        );
-    });
-    return ajaxCalls;
-}
-
-function deleteAllSelected(orgs, users) {
-    let ajaxCalls = [];
-    if (orgs.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(orgs, "organizations/%s/delete/"));
-    if (users.length)
-        ajaxCalls = ajaxCalls.concat(deleteSelected(users, "organizations/%s/users/%s/delete/"));
-    return ajaxCalls;
+function deleteSelected(orgs, users) {
+    const ajaxCalls = [];
+    orgs.each((_, org) => ajaxCalls.push(deleteOrgApi({orgID: $(org).data('id')})));
+    users.each((_, user) => ajaxCalls.push(deleteUserApi({orgID: $(user).data('orgID'), userID: $(user).data('id')})));
+    $.when.apply($, ajaxCalls).then(function() {
+        $("#modal").modal("hide");
+    })
 }
 
 function addOrg() {
@@ -128,7 +111,10 @@ function rebuildUsersByOrgID(orgID) {
             func: rebuildElements,
             args: {
                 prefix: 'user', contSelector: `#org-${orgID} .user-list`, template: userTemplate, 
-                callbacks: [configureUserList, [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes]
+                callbacks: [
+                    configureUserList, [insertIDsIntoCheckboxes, 'user', 'org', 'organization'],
+                    [insertEditModal, 'user', showAddEditUserModal], checkForCheckBoxes
+                ]
             }
         }]
     });
@@ -140,7 +126,10 @@ function rebuildOrgs() {
             func: rebuildElements,
             args: {
                 prefix: 'org', contSelector: '#orgs-container', template: orgTemplate, 
-                callbacks: [configureNavbarBtns, [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes]
+                callbacks: [
+                    configureNavbarBtns, [insertIDsIntoCheckboxes, 'org'],
+                    [insertEditModal, 'org', showAddEditOrgModal], checkForCheckBoxes
+                ]
             }
         }]
     });
