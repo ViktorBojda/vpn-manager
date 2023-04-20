@@ -8,24 +8,26 @@ function showBulkAddUsersModal(orgData) {
         alert("error: orgData variable must be non empty array containing data about organizations");
         return;
     }
-    let $orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
-        $.each(orgData, function(key, val) {
-            $('<option>').val(val.id).text(val.name).appendTo($orgSelect);
+    const orgSelect = $(`<select id='form-input-org' name='organization' class='form-select' required></select>`);
+        $.each(orgData, function(_, val) {
+            $('<option>').val(val.id).text(val.name).appendTo(orgSelect);
         });
+    const textareaPlaceholder = 'user1, user1@email.com\nuser2, user2@email.com\n . . .'
 
     $("#modal-header").text("Bulk Add Users");
     $("#modal-body").html(
         `<form id="form">
             <div class="mb-3">
-                <label for="form-input-name" class="form-label">
+                <label for="form-input-user-list" class="form-label">
                     Enter list of usernames and optionally an email addresses on each line 
                     with a comma separating the username from the email address
                 </label>
-                <textarea class="w-100" style="min-width: 40ch; resize: none;" name="user_list" id="form-input-user-list" rows="10" required></textarea>
+                <textarea class="w-100" style="min-width: 40ch; resize: none;" name="user_list" 
+                id="form-input-user-list" rows="10" placeholder="${textareaPlaceholder}" required></textarea>
             </div>
             <div class="mb-3">
                 <label for="form-input-org" class="form-label">Select an organization</label>
-                ${$orgSelect.prop('outerHTML')}
+                ${orgSelect.prop('outerHTML')}
             </div>
         </form>`
     )
@@ -359,6 +361,50 @@ function showAddEditRouteModal(action, data) {
     $("#form").off('submit').on("submit", function (event) {
         event.preventDefault();
         action === 'add' ? addRoute() : editRoute();
+    });
+
+    $("#modal").modal("show");
+}
+
+function showBulkAddRoutesModal(serverData) {
+    if (!Array.isArray(serverData) || !serverData.length) {
+        alert("error: serverData variable must be non empty array containing data about servers");
+        return;
+    }
+    const serverSelect = $(`<select id='form-input-server' name='server' class='form-select' required></select>`);
+        $.each(serverData, function(_, val) {
+            $('<option>').val(val.id).text(val.name).appendTo(serverSelect);
+        });
+    const textareaPlaceholder = '10.12.32.0/24, comment 1\n192.168.200.0/24, comment 2\n . . .'
+
+    $("#modal-header").text("Bulk Add Routes");
+    $("#modal-body").html(
+        `<form id="form">
+            <div class="mb-3">
+                <label for="form-input-route-list" class="form-label">
+                    Enter list of networks and optionally a comment on each line 
+                    with a comma separating the network from the comment
+                </label>
+                <textarea class="w-100" style="min-width: 40ch; resize: none;" name="route_list" 
+                id="form-input-route-list" rows="10" placeholder="${textareaPlaceholder}" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="form-input-server" class="form-label">Select a server</label>
+                ${serverSelect.prop('outerHTML')}
+            </div>
+        </form>`
+    )
+    $("#modal-footer").html(
+        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">Add</button>`
+    )
+
+    $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
+    $("#form").trigger('input');
+
+    $("#form").off('submit').on("submit", function (event) {
+        event.preventDefault();
+        bulkAddRoutes();
     });
 
     $("#modal").modal("show");

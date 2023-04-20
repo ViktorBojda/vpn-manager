@@ -63,6 +63,27 @@ function addRoute() {
     });
 }
 
+function bulkAddRoutes() {
+    const data = parseFormData();
+    const routeList = [];
+
+    const lines = data.route_list.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim() === "")
+            continue;
+        
+        const values = lines[i].split(",");
+        const network = values[0].trim();
+        const comment = values[1] ? values[1].trim() : "";
+
+        routeList.push({ network: network, comment: comment });
+    }
+    bulkCreateRoutesApi({
+        serverID: data.server, data: {'route_list': routeList},
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+    });
+}
+
 function editRoute() {
     const data = parseFormData();
     updateRouteApi({
@@ -162,15 +183,17 @@ function refreshAttachOrgModal() {
     });
 }
 
-function toggleBtns(serverData) {
+function configureNavbarBtns(serverData) {
     if (serverData.length == 0) {
         $('#btn-add-route').prop('disabled', true);
+        $('#btn-bulk-add-routes').prop('disabled', true);
         console.log("No servers found, you must add server before you can add route!");
         $('#btn-attach-org').prop('disabled', true);
         console.log("No servers found, you must add server before you can attach organization!");
         return;
     }
     $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddEditRouteModal('add', serverData));
+    $('#btn-bulk-add-routes').prop('disabled', false).off('click').on('click', () => showBulkAddRoutesModal(serverData));
     $('#servers-container').data('serverData', serverData);
     
     refreshAttachOrgModal();
@@ -202,7 +225,7 @@ function rebuildServers() {
             args: {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
                 callbacks: [
-                    [insertIDsIntoCheckboxes, 'server'], toggleBtns,
+                    [insertIDsIntoCheckboxes, 'server'], configureNavbarBtns,
                     [insertEditModal, 'server', 'name', showAddEditServerModal], checkForCheckBoxes
                 ]
             }

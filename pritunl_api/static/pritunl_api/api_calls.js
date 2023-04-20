@@ -149,6 +149,12 @@ function createRouteApi({serverID, data, doneCallbacks = [], failCallbacks = []}
     );
 }
 
+function bulkCreateRoutesApi({serverID, data, doneCallbacks = []}) {
+    return apiCall(
+        {path: `servers/${serverID}/routes/bulk-create/`, settings: createSettings('POST', data), doneCallbacks: doneCallbacks}
+    );
+}
+
 function updateRouteApi({serverID, routeID, data, doneCallbacks = [], failCallbacks = []}) {
     return apiCall(
         {path: `servers/${serverID}/routes/${routeID}/update/`, settings: createSettings('PUT', data), doneCallbacks: doneCallbacks, failCallbacks: failCallbacks}

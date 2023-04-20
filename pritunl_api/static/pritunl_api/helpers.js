@@ -99,7 +99,7 @@ function rebuildElements({apiData, prefix, contSelector, template, callbacks = [
     apiData.forEach((data, idx) => {
         let elm = container.find(`#${prefix}-${data.id}`);
         if (elm.length)
-            $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value ? value : ''));
+            $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value == null ? '' : value));
         else {
             elm = $(template(data));
             container.append(elm);

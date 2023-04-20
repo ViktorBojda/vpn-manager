@@ -70,6 +70,11 @@ route_patterns = [
         name="routes-create",
     ),
     path(
+        "bulk-create/",
+        views.RouteBulkCreateApi.as_view(),
+        name="routes-bulk-create",
+    ),
+    path(
         "<str:route_id>/",
         views.RouteDetailApi.as_view(),
         name="routes-detail",

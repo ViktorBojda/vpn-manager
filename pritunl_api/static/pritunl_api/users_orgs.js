@@ -83,6 +83,7 @@ function editUser() {
 function configureNavbarBtns(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
+        $('#btn-bulk-add-users').prop('disabled', true);
         console.log("No organizations found, you must add organization before you can add user!");
         $('#btn-del-select').prop('disabled', true);
         return;

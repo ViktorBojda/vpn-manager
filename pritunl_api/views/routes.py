@@ -4,16 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.serializers import (
     Serializer,
     CharField,
-    IntegerField,
-    ChoiceField,
+    ListField
 )
 
-from pritunl_api.pritunl_request import auth_request
 from pritunl_api.selectors.routes import get_all_routes, get_route_by_id
-from pritunl_api.selectors.servers import get_all_servers, get_server_by_id, get_server_orgs, get_server_output, get_server_routes
 from pritunl_api.serializers import RouteSerializer
-from pritunl_api.services.routes import create_route, delete_route, update_route
-from pritunl_api.services.servers import create_server, delete_server, update_server
+from pritunl_api.services.routes import bulk_create_route, create_route, delete_route, update_route
 from pritunl_api.validators import validate_ipv4_network_address
 
 
@@ -29,6 +25,23 @@ class RouteCreateApi(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = create_route(server_id=server_id, **serializer.data)
+
+        return Response(data, status.HTTP_201_CREATED)
+    
+
+class RouteBulkCreateApi(APIView):
+    """
+    Creates new users in bulk for organization.
+    """
+
+    class InputSerializer(Serializer):
+        route_list = ListField(child=RouteSerializer(), allow_empty=False)
+
+    def post(self, request, server_id) -> Response:
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = bulk_create_route(server_id=server_id, **serializer.data)
 
         return Response(data, status.HTTP_201_CREATED)
 

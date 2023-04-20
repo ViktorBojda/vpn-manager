@@ -1,6 +1,6 @@
 import json
 import pritunl_api.services.servers as servers
-from typing import Dict
+from typing import Dict, List, Optional
 
 from pritunl_api.pritunl_request import auth_request
 from pritunl_api.selectors.routes import get_route_by_id
@@ -46,3 +46,22 @@ def delete_route(*, route_id: str, server_id: str):
     auth_request(
         method="DELETE", path=f"/server/{server_id}/route/{route_id}", raise_err=True
     )
+
+
+def bulk_create_route(
+    *, server_id: str, route_list: List[Dict[str, Optional[str]]]
+) -> List[Dict]:
+    was_online = servers.stop_server_if_online_and_verify(server_id)
+
+    response = auth_request(
+        method="POST",
+        path=f"/server/{server_id}/routes",
+        headers={
+            "Content-Type": "application/json",
+        },
+        data=json.dumps(route_list),
+        raise_err=True,
+    )
+    if was_online:
+        servers.start_server_if_offline_and_verify(server_id)
+    return response.json()
