@@ -169,8 +169,8 @@ function showDeleteUsersOrgsModal() {
     const users = $(".user-check:checked:not(:disabled)");
 
     const $itemList = $("<ul>");
-    orgs.each((_, org) => $("<li>").text($(org).parents('.org-wrapper').find(".org-data-name").text()).appendTo($itemList));
-    users.each((_, user) => $("<li>").text($(user).parents('.user-item').find(".user-data-name").text()).appendTo($itemList));
+    orgs.each((_, org) => $("<li>").text($(org).closest('.org-wrapper').find(".org-data-name").text()).appendTo($itemList));
+    users.each((_, user) => $("<li>").text($(user).closest('.user-item').find(".user-data-name").text()).appendTo($itemList));
 
     $("#modal-header").text("Delete Selected");
     $("#modal-body").html(
@@ -459,20 +459,20 @@ function showDeleteServersModal() {
     const routesOrgsData = {};
     const itemList = $("<ul>");
 
-    servers.each((_, server) => itemList.append($(`<li>${$(server).parents('.server-wrapper').find(".server-data-name").text()}</li>`)));
+    servers.each((_, server) => itemList.append($(`<li>${$(server).closest('.server-wrapper').find(".server-data-name").text()}</li>`)));
     routes.each((_, route) => {
         const serverID = $(route).data('serverID');
         const routeID = $(route).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'route', entity_id: routeID});
-        itemList.append($(`<li>${$(route).parents('.route-item').find(".route-data-network").text()}</li>`));
+        itemList.append($(`<li>${$(route).closest('.route-item').find(".route-data-network").text()}</li>`));
     });
     orgs.each((_, org) => {
         const serverID = $(org).data('serverID');
         const orgID = $(org).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'organization', entity_id: orgID});
-        itemList.append($(`<li>${$(org).parents('.org-item').find(".org-data-name").text()}</li>`));
+        itemList.append($(`<li>${$(org).closest('.org-item').find(".org-data-name").text()}</li>`));
     });
 
     $("#modal-header").text("Delete Selected");

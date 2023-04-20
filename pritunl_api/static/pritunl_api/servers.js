@@ -249,7 +249,7 @@ $("#btn-add-server").on("click", () => showAddEditServerModal('add'));
 $("#btn-del-select").on("click", showDeleteServersModal);
 
 $(document).on("change", ".server-check", function() {
-    $(this).parents('.server-wrapper').find('.org-list, .route-list').find("input[name='checkbox']").prop({
+    $(this).closest('.server-wrapper').find('.org-list, .route-list').find("input[name='checkbox']").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });

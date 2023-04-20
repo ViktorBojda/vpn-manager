@@ -10,7 +10,7 @@ const orgTemplate = (orgData) =>
         <ul class='list-group list-group-flush user-list'></ul>
     </div>`;
 const userTemplate = (userData) =>
-    `<li id="user-${userData.id}" class="list-group-item row d-flex mx-0 px-0 align-items-center user-item">
+    `<li id="user-${userData.id}" class="list-group-item row d-flex mx-0 px-0 align-items-center user-item hidden">
         <div class="col-auto">
             <span class="pe-3 me-3 border-end"><input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
             <span class="user-data-name">${userData.name}</span>
@@ -19,6 +19,20 @@ const userTemplate = (userData) =>
             <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
         </div>
     </li>`;
+
+function searchOrgs(value) {
+    $('.org-data-name').each(function() {
+        const orgWrapper = $(this).closest('.org-wrapper');
+        ($(this).text().toLowerCase().indexOf(value) > -1) ? orgWrapper.removeClass('d-none') : orgWrapper.addClass('d-none');
+    });
+}
+
+function searchUsers(value) {
+    $('.org-wrapper:visible .user-data-name').each(function() {
+        const userItem = $(this).closest('.user-item');
+        ($(this).text().toLowerCase().indexOf(value) > -1) ? userItem.removeClass('d-none') : userItem.addClass('d-none');
+    });
+}
 
 function deleteSelected(orgs, users) {
     const ajaxCalls = [];
@@ -152,9 +166,11 @@ function fetchAllData() {
 
 $("#btn-del-select").on("click", showDeleteUsersOrgsModal);
 $("#btn-add-org").on("click", () => showAddEditOrgModal('add'));
+$('#input-search-orgs').on('input', (ev) => searchOrgs($(ev.target).val()));
+$('#input-search-users').on('input', (ev) => searchUsers($(ev.target).val()));
 
 $(document).on("change", ".org-check", function () {
-    $(this).parents('.org-wrapper').find(".user-list").find(".user-check").prop({
+    $(this).closest('.org-wrapper').find(".user-list").find(".user-check").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });
