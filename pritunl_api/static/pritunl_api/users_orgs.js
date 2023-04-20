@@ -1,17 +1,23 @@
 const urlBase = "/pritunl/api/";
 const orgTemplate = (orgData) =>
     `<div id=org-${orgData.id} class='card my-3 org-wrapper'>
-        <div class='card-header org-header'>
-            <input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-            <span class="org-data-name">${orgData.name}</span>
+        <div class='card-header row mx-0 px-0 align-items-center'>
+            <div class="col-auto">
+                <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
+                <span class="org-data-name">${orgData.name}</span>
+            </div>
         </div>
-        <ul class='list-group list-group-flush d-flex user-list'></ul>
+        <ul class='list-group list-group-flush user-list'></ul>
     </div>`;
 const userTemplate = (userData) =>
-    `<li id="user-${userData.id}" class="list-group-item user-item">
-        <input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-        <span class="user-data-name">${userData.name}</span>
-        <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
+    `<li id="user-${userData.id}" class="list-group-item row d-flex mx-0 px-0 align-items-center user-item">
+        <div class="col-auto">
+            <span class="pe-3 me-3 border-end"><input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
+            <span class="user-data-name">${userData.name}</span>
+        </div>
+        <div class="col d-flex column-gap-3 justify-content-end">
+            <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
+        </div>
     </li>`;
 
 function deleteSelected(orgs, users) {
@@ -148,7 +154,7 @@ $("#btn-del-select").on("click", showDeleteUsersOrgsModal);
 $("#btn-add-org").on("click", () => showAddEditOrgModal('add'));
 
 $(document).on("change", ".org-check", function () {
-    $(this).parent().siblings(".user-list").find(".user-check").prop({
+    $(this).parents('.org-wrapper').find(".user-list").find(".user-check").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });

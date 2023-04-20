@@ -10,7 +10,7 @@ from rest_framework.serializers import (
 from pritunl_api.selectors.routes import get_all_routes, get_route_by_id
 from pritunl_api.serializers import RouteSerializer
 from pritunl_api.services.routes import bulk_create_route, create_route, delete_route, update_route
-from pritunl_api.validators import validate_ipv4_network_address
+from pritunl_api.validators import validate_ipv4_private_network_address
 
 
 class RouteCreateApi(APIView):
@@ -74,7 +74,6 @@ class RouteUpdateApi(APIView):
     """
 
     class InputSerializer(Serializer):
-        network = CharField(required=False, validators=[validate_ipv4_network_address])
         comment = CharField(required=False, allow_blank=True, allow_null=True)
 
     def put(self, request, route_id, server_id) -> Response:

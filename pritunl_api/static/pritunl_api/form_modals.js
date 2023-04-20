@@ -165,12 +165,12 @@ function showAddEditOrgModal(action, data = null) {
 }
 
 function showDeleteUsersOrgsModal() {
-    let orgs = $(".org-check:checked");
-    let users = $(".user-check:checked:not(:disabled)");
+    const orgs = $(".org-check:checked");
+    const users = $(".user-check:checked:not(:disabled)");
 
-    let $itemList = $("<ul>");
-    orgs.each((_, elm) => $("<li>").text($(elm).siblings(".org-data-name").text()).appendTo($itemList));
-    users.each((_, elm) => $("<li>").text($(elm).siblings(".user-data-name").text()).appendTo($itemList));
+    const $itemList = $("<ul>");
+    orgs.each((_, org) => $("<li>").text($(org).parents('.org-wrapper').find(".org-data-name").text()).appendTo($itemList));
+    users.each((_, user) => $("<li>").text($(user).parents('.user-item').find(".user-data-name").text()).appendTo($itemList));
 
     $("#modal-header").text("Delete Selected");
     $("#modal-body").html(
@@ -340,7 +340,7 @@ function showAddEditRouteModal(action, data) {
         );
     }
 
-    $("#modal-header").text("Add Route");
+    $("#modal-header").text(`${(action === 'edit') ? 'Edit Route' : 'Add Route'}`);
     $("#modal-body").html(
         `<form id="form">
             ${(action === 'edit') ? '' : networkDiv.prop('outerHTML')}
@@ -353,7 +353,7 @@ function showAddEditRouteModal(action, data) {
     )
     $("#modal-footer").html(
         `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" id="form-submit-btn" form="form" class="btn btn-primary">Add</button>`
+        <button type="submit" id="form-submit-btn" form="form" class="btn btn-primary">${(action === 'edit') ? 'Edit' : 'Add'}</button>`
     )
     $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
     $("#form").trigger('input');
@@ -459,20 +459,20 @@ function showDeleteServersModal() {
     const routesOrgsData = {};
     const itemList = $("<ul>");
 
-    servers.each((_, server) => itemList.append($(`<li>${$(server).siblings(".server-data-name").text()}</li>`)));
+    servers.each((_, server) => itemList.append($(`<li>${$(server).parents('.server-wrapper').find(".server-data-name").text()}</li>`)));
     routes.each((_, route) => {
         const serverID = $(route).data('serverID');
         const routeID = $(route).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'route', entity_id: routeID});
-        itemList.append($(`<li>${$(route).siblings(".route-data-network").text()}</li>`));
+        itemList.append($(`<li>${$(route).parents('.route-item').find(".route-data-network").text()}</li>`));
     });
     orgs.each((_, org) => {
         const serverID = $(org).data('serverID');
         const orgID = $(org).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'organization', entity_id: orgID});
-        itemList.append($(`<li>${$(org).siblings(".org-data-name").text()}</li>`));
+        itemList.append($(`<li>${$(org).parents('.org-item').find(".org-data-name").text()}</li>`));
     });
 
     $("#modal-header").text("Delete Selected");

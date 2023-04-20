@@ -1,4 +1,5 @@
 import json
+import socket
 import pritunl_api.services.servers as servers
 from typing import Dict, List, Optional
 
@@ -8,6 +9,9 @@ from pritunl_api.selectors.routes import get_route_by_id
 
 def create_route(*, server_id: str, **kwargs) -> Dict:
     was_online = servers.stop_server_if_online_and_verify(server_id)
+    network = kwargs.get("network", None)
+    if network and is_dns_name(network):
+        kwargs["network"] = socket.gethostbyname(network)
 
     response = auth_request(
         method="POST",
@@ -52,6 +56,10 @@ def bulk_create_route(
     *, server_id: str, route_list: List[Dict[str, Optional[str]]]
 ) -> List[Dict]:
     was_online = servers.stop_server_if_online_and_verify(server_id)
+    for route in route_list:
+        network = route.get("network", None)
+        if network and is_dns_name(network):
+            route["network"] = socket.gethostbyname(network)
 
     response = auth_request(
         method="POST",
@@ -65,3 +73,11 @@ def bulk_create_route(
     if was_online:
         servers.start_server_if_offline_and_verify(server_id)
     return response.json()
+
+
+def is_dns_name(addr):
+    try:
+        socket.gethostbyname(addr)
+        return True
+    except socket.gaierror:
+        return False

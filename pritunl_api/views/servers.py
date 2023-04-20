@@ -28,7 +28,7 @@ from pritunl_api.services.servers import (
     stop_server,
     update_server,
 )
-from pritunl_api.validators import validate_ipv4_network_address
+from pritunl_api.validators import validate_ipv4_private_network_address
 
 
 class ServerCreateApi(APIView):
@@ -76,7 +76,7 @@ class ServerUpdateApi(APIView):
 
     class InputSerializer(Serializer):
         name = CharField(required=False)
-        network = CharField(required=False, validators=[validate_ipv4_network_address])
+        network = CharField(required=False, validators=[validate_ipv4_private_network_address])
         groups = ListField(required=False, child=CharField(), allow_empty=True, allow_null=True)
         port = IntegerField(required=False, min_value=1, max_value=65535)
         protocol = ChoiceField(required=False, choices=[("tcp", "tcp"), ("udp", "udp")])

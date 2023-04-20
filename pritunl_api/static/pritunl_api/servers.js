@@ -1,14 +1,18 @@
 const urlBase = "/pritunl/api/";
 const serverTemplate = (serverData) =>
     `<div id=server-${serverData.id} class='card my-3 server-wrapper'>
-        <div class='card-header server-header'>
-            <input class="form-check-input server-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-            <span class="server-data-name">${serverData.name}</span>
-            <button type="button" disabled class="btn btn-success server-start-btn ms-3">Start Server</button>
-            <button type="button" class="btn btn-primary server-restart-btn ms-3">Restart Server</button>
-            <button type="button" class="btn btn-warning server-stop-btn">Stop Server</button>
+        <div class='card-header row mx-0 px-0 align-items-center'>
+            <div class="col-auto">
+                <span class="pe-3 me-3 border-end"><input class="form-check-input server-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
+                <span class="server-data-name">${serverData.name}</span>
+            </div>
+            <div class="col d-flex column-gap-3 justify-content-end">
+                <button type="button" disabled class="btn btn-success server-start-btn">Start Server</button>
+                <button type="button" class="btn btn-primary server-restart-btn">Restart Server</button>
+                <button type="button" class="btn btn-warning server-stop-btn">Stop Server</button>
+            </div>
         </div>
-        <ul class="list-group">
+        <ul class="list-group list-group-flush">
             <li class="list-group-item">Status: <span class="server-data-status">${serverData.status}</span></li>
             <li class="list-group-item">Uptime: <span class="server-uptime">-</span></li>
             <li class="list-group-item">
@@ -16,26 +20,25 @@ const serverTemplate = (serverData) =>
                 <span class="server-data-user_count">${serverData.user_count}</span> users online
             </li>
             <li class="list-group-item">Devices Online: <span class="server-data-devices_online">${serverData.devices_online}</span></li>
-            <li class="list-group-item">User Count: <span class="server-data-user_count">${serverData.user_count}</span></li>
             <li class="list-group-item">Network: <span class="server-data-network">${serverData.network}</span></li>
             <li class="list-group-item">
                 Port: <span class="server-data-port">${serverData.port}</span> /
                 <span class="server-data-protocol">${serverData.protocol}</span>
             </li>
         </ul>
-        <ul class='list-group list-group-flush d-flex route-list'></ul>
-        <ul class='list-group list-group-flush d-flex org-list'></ul>
+        <ul class='list-group list-group-flush my-2 route-list'></ul>
+        <ul class='list-group list-group-flush org-list'></ul>
     </div>`;
 const routeTemplate = (routeData) => 
-    `<li id="route-${routeData.id}" class="list-group-item route-item">
-        <input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-        <span class="me-3 route-data-network">${routeData.network}</span>
+    `<li id="route-${routeData.id}" class="list-group-item row mx-0 px-0 align-items-center route-item">
+        <span class="pe-3 me-3 border-end"><input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
+        <span class="px-0 me-3 route-data-network">${routeData.network}</span>
         <span class="route-data-comment">${routeData.comment ? routeData.comment : ''}</span>
     </li>`;
 const orgTemplate = (orgData) => 
-    `<li id="org-${orgData.id}" class="list-group-item org-item">
-        <input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox">
-        <span class="org-data-name">${orgData.name}</span>
+    `<li id="org-${orgData.id}" class="list-group-item row mx-0 px-0 align-items-center org-item">
+        <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
+        <span class="px-0 org-data-name">${orgData.name}</span>
     </li>`;
 
 function deleteSelected(servers, routesOrgs) {
@@ -133,10 +136,10 @@ function rebuildAttachedOrgsByServerID(serverID) {
     });
 }
 
-function delCheckboxForVirtualNetwork(routeData) {
+function disableCheckForVirtualNetwork(routeData) {
     routeData.forEach(route => {
         if (route.virtual_network)
-            $(`#server-${route.server} #route-${route.id} .route-check`).remove();
+            $(`#server-${route.server} #route-${route.id} .route-check`).attr('name', '').prop('disabled', true);
     });
 }
 
@@ -148,7 +151,7 @@ function rebuildRoutesByServerID(serverID) {
             args: {
                 prefix: 'route', contSelector: `#server-${serverID} .route-list`, template: routeTemplate,
                 callbacks: [
-                    [insertIDsIntoCheckboxes, 'route', 'server'], delCheckboxForVirtualNetwork,
+                    [insertIDsIntoCheckboxes, 'route', 'server'], disableCheckForVirtualNetwork,
                     [insertEditModal, 'route', 'network', showAddEditRouteModal, 'server'], checkForCheckBoxes
                 ]
             }
@@ -246,7 +249,7 @@ $("#btn-add-server").on("click", () => showAddEditServerModal('add'));
 $("#btn-del-select").on("click", showDeleteServersModal);
 
 $(document).on("change", ".server-check", function() {
-    $(this).parent().siblings(".org-list, .route-list").find("input[name='checkbox']").prop({
+    $(this).parents('.server-wrapper').find('.org-list, .route-list').find("input[name='checkbox']").prop({
         "disabled": $(this).is(":checked"),
         "checked": $(this).is(":checked")
     });

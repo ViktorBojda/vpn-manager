@@ -7,7 +7,7 @@ from rest_framework.serializers import (
     ChoiceField,
 )
 
-from pritunl_api.validators import validate_ipv4_network_address
+from pritunl_api.validators import validate_ipv4_private_network_address
 
 
 class UserSerializer(Serializer):
@@ -40,7 +40,7 @@ class UserSerializer(Serializer):
 
 class ServerSerializer(Serializer):
     name = CharField()
-    network = CharField(validators=[validate_ipv4_network_address])
+    network = CharField(validators=[validate_ipv4_private_network_address])
     groups = ListField(required=False, child=CharField(), allow_empty=True, allow_null=True)
     port = IntegerField(min_value=1, max_value=65535)
     protocol = ChoiceField(choices=[("tcp", "tcp"), ("udp", "udp")])
@@ -69,5 +69,5 @@ class ServerSerializer(Serializer):
 # "virtual_network":null,"wg_network":null,"network_link":null,"server_link":null,"nat":true,"nat_interface":"",
 # "nat_netmap":"","net_gateway":false,"advertise":false,"vpc_region":null,"vpc_id":null}
 class RouteSerializer(Serializer):
-    network = CharField(validators=[validate_ipv4_network_address])
+    network = CharField()
     comment = CharField(allow_blank=True, allow_null=True)

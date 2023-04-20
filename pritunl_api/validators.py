@@ -4,12 +4,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-def validate_ipv4_network_address(value):
+def validate_ipv4_private_network_address(value):
     try:
         ipaddress.ip_network(value, strict=False)
     except ValueError:
         raise ValidationError(
-            _("Enter a valid IPv4 network address."),
+            _("Enter a valid IPv4 private network address."),
             code="invalid",
             params={"value": value},
         )
