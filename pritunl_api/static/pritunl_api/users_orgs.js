@@ -20,18 +20,25 @@ const userTemplate = (userData) =>
         </div>
     </li>`;
 
-function searchOrgs(value) {
-    $('.org-data-name').each(function() {
-        const orgWrapper = $(this).closest('.org-wrapper');
-        ($(this).text().toLowerCase().indexOf(value) > -1) ? orgWrapper.removeClass('d-none') : orgWrapper.addClass('d-none');
-    });
-}
-
-function searchUsers(value) {
-    $('.org-wrapper:visible .user-data-name').each(function() {
-        const userItem = $(this).closest('.user-item');
-        ($(this).text().toLowerCase().indexOf(value) > -1) ? userItem.removeClass('d-none') : userItem.addClass('d-none');
-    });
+function searchOrgsOrUsers(value) {
+    const selected = $('#select-search').val();
+    if (selected === 'orgs') {
+        $('.user-item').each((_, user) => $(user).removeClass('d-none'));
+        $('.org-data-name').each(function() {
+            const orgWrapper = $(this).closest('.org-wrapper');
+            ($(this).text().toLowerCase().indexOf(value.toLowerCase()) > -1) ? orgWrapper.removeClass('d-none') : orgWrapper.addClass('d-none');
+        });
+    }
+    else if (selected === 'users') {
+        $('.org-wrapper').each((_, org) => {
+            let found = false;
+            $(org).find('.user-data-name').each((_, user) => {
+                const userItem = $(user).closest('.user-item');
+                ($(user).text().toLowerCase().indexOf(value.toLowerCase()) > -1) ? (userItem.removeClass('d-none'), found = true) : userItem.addClass('d-none');
+            });
+            found ? $(org).removeClass('d-none') : $(org).addClass('d-none');
+        });
+    }
 }
 
 function deleteSelected(orgs, users) {
@@ -166,8 +173,8 @@ function fetchAllData() {
 
 $("#btn-del-select").on("click", showDeleteUsersOrgsModal);
 $("#btn-add-org").on("click", () => showAddEditOrgModal('add'));
-$('#input-search-orgs').on('input', (ev) => searchOrgs($(ev.target).val()));
-$('#input-search-users').on('input', (ev) => searchUsers($(ev.target).val()));
+$('#input-search').on('input', (ev) => searchOrgsOrUsers($(ev.target).val()));
+$('#select-search').on('change', () => searchOrgsOrUsers($('#input-search').val()));
 
 $(document).on("change", ".org-check", function () {
     $(this).closest('.org-wrapper').find(".user-list").find(".user-check").prop({
