@@ -4,7 +4,7 @@ const orgTemplate = (orgData) =>
         <div class='card-header row mx-0 px-0 align-items-center'>
             <div class="col-auto">
                 <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
-                <span class="org-data-name">${orgData.name}</span>
+                <span class="fw-medium clickable org-data-name">${orgData.name}</span>
             </div>
         </div>
         <ul class='list-group list-group-flush user-list'></ul>
@@ -13,20 +13,22 @@ const userTemplate = (userData) =>
     `<li id="user-${userData.id}" class="list-group-item row d-flex mx-0 px-0 align-items-center user-item hidden">
         <div class="col-auto">
             <span class="pe-3 me-3 border-end"><input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
-            <span class="user-data-name">${userData.name}</span>
+            <span class="fw-medium clickable user-data-name">${userData.name}</span>
         </div>
-        <div class="col d-flex column-gap-3 justify-content-end">
-            <button type="button" class="btn btn-primary user-links-btn ms-3">Links</button>
+        <div class="col d-flex column-gap-3 align-items-center justify-content-end">
+            <span class="pe-3 border-end user-data-status">${userData.status}</span>
+            <button type="button" class="btn btn-primary user-links-btn ms-1">Links</button>
         </div>
     </li>`;
 
 function searchOrgsOrUsers(value) {
     const selected = $('#select-search').val();
+    const searchedTxt = value.toLowerCase();
     if (selected === 'orgs') {
         $('.user-item').each((_, user) => $(user).removeClass('d-none'));
         $('.org-data-name').each(function() {
             const orgWrapper = $(this).closest('.org-wrapper');
-            ($(this).text().toLowerCase().indexOf(value.toLowerCase()) > -1) ? orgWrapper.removeClass('d-none') : orgWrapper.addClass('d-none');
+            ($(this).text().toLowerCase().indexOf(searchedTxt) > -1) ? orgWrapper.removeClass('d-none') : orgWrapper.addClass('d-none');
         });
     }
     else if (selected === 'users') {
@@ -34,7 +36,7 @@ function searchOrgsOrUsers(value) {
             let found = false;
             $(org).find('.user-data-name').each((_, user) => {
                 const userItem = $(user).closest('.user-item');
-                ($(user).text().toLowerCase().indexOf(value.toLowerCase()) > -1) ? (userItem.removeClass('d-none'), found = true) : userItem.addClass('d-none');
+                ($(user).text().toLowerCase().indexOf(searchedTxt) > -1) ? (userItem.removeClass('d-none'), found = true) : userItem.addClass('d-none');
             });
             found ? $(org).removeClass('d-none') : $(org).addClass('d-none');
         });
@@ -121,14 +123,16 @@ function configureNavbarBtns(orgData) {
 
 function configureUserList(userData) {
     userData.forEach((data, _) => {
+        const userItem = $(`#org-${data.organization} #user-${data.id}`);
         if (data.type === 'server') {
-            $(`#org-${data.organization} #user-${data.id}`).remove();
+            userItem.remove();
             return;
         }
-        $(`#org-${data.organization} #user-${data.id} .user-links-btn`)
-            .off('click').on('click', () => fetchUserLinksApi({
+        userItem.find('.user-links-btn').off('click').on('click', () => fetchUserLinksApi({
                 orgID: data.organization, userID: data.id,
-                doneCallbacks: [{func: showUserLinksModal}]}));
+                doneCallbacks: [{func: showUserLinksModal}]
+            }));
+        data.status ? userItem.find('.user-data-status').text('Online') : userItem.find('.user-data-status').text('Offline');
     });
 }
 
@@ -173,8 +177,7 @@ function fetchAllData() {
 
 $("#btn-del-select").on("click", showDeleteUsersOrgsModal);
 $("#btn-add-org").on("click", () => showAddEditOrgModal('add'));
-$('#input-search').on('input', (ev) => searchOrgsOrUsers($(ev.target).val()));
-$('#select-search').on('change', () => searchOrgsOrUsers($('#input-search').val()));
+$(document).on('input change', '#input-search, #select-search', () => searchOrgsOrUsers($('#input-search').val()));
 
 $(document).on("change", ".org-check", function () {
     $(this).closest('.org-wrapper').find(".user-list").find(".user-check").prop({

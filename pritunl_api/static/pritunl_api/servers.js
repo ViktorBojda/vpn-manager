@@ -4,7 +4,7 @@ const serverTemplate = (serverData) =>
         <div class='card-header row mx-0 px-0 align-items-center'>
             <div class="col-auto">
                 <span class="pe-3 me-3 border-end"><input class="form-check-input server-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
-                <span class="server-data-name">${serverData.name}</span>
+                <span class="fw-medium clickable server-data-name">${serverData.name}</span>
             </div>
             <div class="col d-flex column-gap-3 justify-content-end">
                 <button type="button" disabled class="btn btn-success server-start-btn">Start Server</button>
@@ -32,13 +32,13 @@ const serverTemplate = (serverData) =>
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item row mx-0 px-0 align-items-center route-item">
         <span class="pe-3 me-3 border-end"><input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
-        <span class="px-0 me-3 route-data-network">${routeData.network}</span>
-        <span class="route-data-comment">${routeData.comment ? routeData.comment : ''}</span>
+        <span class="px-0 me-1 fw-medium clickable route-data-network">${routeData.network}</span>
+        <span class="fst-italic route-data-comment">${routeData.comment ? routeData.comment : ''}</span>
     </li>`;
 const orgTemplate = (orgData) => 
     `<li id="org-${orgData.id}" class="list-group-item row mx-0 px-0 align-items-center org-item">
         <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
-        <span class="px-0 org-data-name">${orgData.name}</span>
+        <span class="px-0 fw-medium org-data-name">${orgData.name}</span>
     </li>`;
 
 function deleteSelected(servers, routesOrgs) {
@@ -139,7 +139,8 @@ function rebuildAttachedOrgsByServerID(serverID) {
 function disableCheckForVirtualNetwork(routeData) {
     routeData.forEach(route => {
         if (route.virtual_network)
-            $(`#server-${route.server} #route-${route.id} .route-check`).attr('name', '').prop('disabled', true);
+            $(`#server-${route.server} #route-${route.id} .route-check`).attr('name', '')
+                .prop('disabled', true).prop('indeterminate', true);
     });
 }
 

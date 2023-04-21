@@ -1,3 +1,8 @@
 .border-radius-none {
     border-radius: 0;
 }
+
+.clickable:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
