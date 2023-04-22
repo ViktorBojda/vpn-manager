@@ -9,7 +9,7 @@ const orgTemplate = (orgData) =>
         <ul class='list-group list-group-flush user-list'></ul>
     </div>`;
 const userTemplate = (userData) =>
-    `<li id="user-${userData.id}" class="list-group-item row d-flex mx-0 px-0 align-items-center user-item hidden">
+    `<li id="user-${userData.id}" class="list-group-item border-top border-bottom row d-flex mx-0 px-0 align-items-center user-item">
         <div class="col-auto">
             <span class="pe-3 me-3 border-end"><input class="form-check-input user-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
             <span class="fw-medium clickable user-data-name">${userData.name}</span>
@@ -45,7 +45,7 @@ function searchOrgsOrUsers(value) {
 function deleteSelected(orgs, users) {
     const ajaxCalls = [];
     orgs.each((_, org) => ajaxCalls.push(deleteOrgApi({orgID: $(org).data('id')})));
-    users.each((_, user) => ajaxCalls.push(deleteUserApi({orgID: $(user).data('orgID'), userID: $(user).data('id')})));
+    users.each((_, user) => ajaxCalls.push(deleteUserApi({orgID: $(user).data('org-id'), userID: $(user).data('id')})));
     $.when.apply($, ajaxCalls).then(function() {
         $("#modal").modal("hide");
     })
@@ -166,7 +166,7 @@ function rebuildOrgs() {
     });
 }
 
-function fetchAllData() {
+function rebuildAllData() {
     $.when(rebuildOrgs()).then(function (orgData) {
         orgData.forEach(org => {
             rebuildUsersByOrgID(org.id);
@@ -188,6 +188,6 @@ $(document).on("change", ".org-check", function () {
 $(document).on("change", "input[name='checkbox']", checkForCheckBoxes);
 
 $(function () {
-    fetchAllData();
+    rebuildAllData();
     listenForEvents();
 });

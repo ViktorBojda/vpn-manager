@@ -6,9 +6,9 @@ const serverTemplate = (serverData) =>
                 <span class="fw-medium clickable server-data-name">${serverData.name}</span>
             </div>
             <div class="col d-flex column-gap-3 justify-content-end">
-                <button type="button" disabled class="btn btn-success server-start-btn">Start Server</button>
-                <button type="button" class="btn btn-primary server-restart-btn">Restart Server</button>
-                <button type="button" class="btn btn-warning server-stop-btn">Stop Server</button>
+                <button type="button" disabled class="btn btn-success server-start-btn" onclick="controlServer('${serverData.id}', 'start')">Start Server</button>
+                <button type="button" class="btn btn-primary server-restart-btn" onclick="controlServer('${serverData.id}', 'restart')">Restart Server</button>
+                <button type="button" class="btn btn-warning server-stop-btn" onclick="controlServer('${serverData.id}', 'stop')">Stop Server</button>
             </div>
         </div>
         <ul class="list-group list-group-flush">
@@ -29,13 +29,13 @@ const serverTemplate = (serverData) =>
         <ul class='list-group list-group-flush org-list'></ul>
     </div>`;
 const routeTemplate = (routeData) => 
-    `<li id="route-${routeData.id}" class="list-group-item row mx-0 px-0 align-items-center route-item">
+    `<li id="route-${routeData.id}" class="list-group-item border-top border-bottom row mx-0 px-0 align-items-center route-item">
         <span class="pe-3 me-3 border-end"><input class="form-check-input route-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
         <span class="px-0 me-1 fw-medium clickable route-data-network">${routeData.network}</span>
         <span class="fst-italic route-data-comment">${routeData.comment ? routeData.comment : ''}</span>
     </li>`;
 const orgTemplate = (orgData) => 
-    `<li id="org-${orgData.id}" class="list-group-item row mx-0 px-0 align-items-center org-item">
+    `<li id="org-${orgData.id}" class="list-group-item border-top border-bottom row mx-0 px-0 align-items-center org-item">
         <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
         <span class="px-0 fw-medium org-data-name">${orgData.name}</span>
     </li>`;
@@ -120,7 +120,9 @@ function rebuildAttachedOrgsByServerID(serverID) {
         doneCallbacks: [
             {
                 func: ({apiData}) => {
-                    const startBtn = $(`#server-${serverID} .server-start-btn`);
+                    const serverWrapper = $(`#server-${serverID}`);
+                    serverWrapper.data('org-count', apiData.length);
+                    const startBtn = serverWrapper.find('.server-start-btn');
                     apiData.length ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
                 }
             },
@@ -159,28 +161,34 @@ function rebuildRoutesByServerID(serverID) {
     });
 }
 
-function controlServer({serverID, action}) {
+function controlServer(serverID, action) {
     const actions = ['start', 'restart', 'stop'];
     if (!actions.includes(action)) {
         console.error('Invalid action: ' + action);
         return;
     }
-    const btn = $(`#server-${serverID} .server-${action}-btn`).prop('disabled', true);
-    controlServerApi({
-        serverID: serverID, action: action,
-        alwaysCallbacks: [{
-            func: ({btn}) => $(btn).prop('disabled', false),
-            args: {btn}
-        }]
-    });
+    $(`#server-${serverID} .server-${action}-btn`).prop('disabled', true);
+    controlServerApi({serverID: serverID, action: action});
 }
 
-function refreshAttachOrgModal() {
+function refreshAttachOrgModal(onlyServers = false) {
     // Refresh org list inside of attach org modal
-    const serverData = $('#servers-container').data('serverData');
+    const serverData = $('#servers-container').data('server-data');
+
+    if (onlyServers) {
+        const orgData = $('#servers-container').data('org-data');
+        $('#btn-attach-org').off('click').on('click', () => showAttachOrgModal(orgData, serverData));
+        return;
+    }
     fetchOrgsApi({
         doneCallbacks: [{
-            func: ({apiData, serverData}) => $('#btn-attach-org').prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)),
+            func: ({apiData, serverData}) => {
+                const btnAttachOrg = $('#btn-attach-org');
+                (apiData && serverData) ?  
+                btnAttachOrg.prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)) :
+                btnAttachOrg.prop('disabled', true)
+                $('#servers-container').data('org-data', apiData);
+            },
             args: {serverData}
         }]
     });
@@ -197,24 +205,28 @@ function configureNavbarBtns(serverData) {
     }
     $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddEditRouteModal('add', serverData));
     $('#btn-bulk-add-routes').prop('disabled', false).off('click').on('click', () => showBulkAddRoutesModal(serverData));
-    $('#servers-container').data('serverData', serverData);
-    
-    refreshAttachOrgModal();
+    $('#servers-container').data('server-data', serverData);
 
+    refreshAttachOrgModal(true);
+}
+
+function configureServerControlBtns(serverData) {
     serverData.forEach(server => {
-        const startBtn = $(`#server-${server.id} .server-start-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'start'}));
-        const restartBtn = $(`#server-${server.id} .server-restart-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'restart'}));
-        const stopBtn = $(`#server-${server.id} .server-stop-btn`).off('click').on('click', () => controlServer({serverID: server.id, action: 'stop'}));
+        const serverWrapper = $(`#server-${server.id}`);
+        const startBtn = serverWrapper.find('.server-start-btn')
+        const restartBtn = serverWrapper.find('.server-restart-btn')
+        const stopBtn = serverWrapper.find('.server-stop-btn')
 
         if (server.status == "online") {
-            startTimer(`#server-${server.id} .server-uptime`, server.uptime);
+            startTimer(serverWrapper.find('.server-uptime'), server.uptime);
             startBtn.hide();
-            restartBtn.show();
-            stopBtn.show();
+            restartBtn.show().prop('disabled', false);
+            stopBtn.show().prop('disabled', false);
         }
         else {
-            stopTimer(`#server-${server.id} .server-uptime`);
+            stopTimer(serverWrapper.find('.server-uptime'));
             startBtn.show();
+            serverWrapper.data('org-count') ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true)
             restartBtn.hide();
             stopBtn.hide();
         }
@@ -228,16 +240,18 @@ function rebuildServers() {
             args: {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
                 callbacks: [
-                    [insertIDsIntoCheckboxes, 'server'], configureNavbarBtns,
+                    [insertIDsIntoCheckboxes, 'server'], configureNavbarBtns, configureServerControlBtns,
                     [insertEditModal, 'server', 'name', showAddEditServerModal], checkForCheckBoxes
-                ]
+                ],
+                onCreateCallback: (elm) => $(elm).data('org-count', 0)
             }
         }]
     });
 }
 
-function fetchAllData() {
+function rebuildAllData() {
     $.when(rebuildServers()).then(function (serverData) {
+        refreshAttachOrgModal();
         serverData.forEach(server => {
             rebuildRoutesByServerID(server.id);
             rebuildAttachedOrgsByServerID(server.id);
@@ -258,6 +272,6 @@ $(document).on("change", ".server-check", function() {
 $(document).on("change", "input[name='checkbox']", checkForCheckBoxes);
 
 $(function() {
-    fetchAllData();
+    rebuildAllData();
     listenForEvents();
 });

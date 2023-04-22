@@ -461,14 +461,14 @@ function showDeleteServersModal() {
 
     servers.each((_, server) => itemList.append($(`<li>${$(server).closest('.server-wrapper').find(".server-data-name").text()}</li>`)));
     routes.each((_, route) => {
-        const serverID = $(route).data('serverID');
+        const serverID = $(route).data('server-id');
         const routeID = $(route).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'route', entity_id: routeID});
         itemList.append($(`<li>${$(route).closest('.route-item').find(".route-data-network").text()}</li>`));
     });
     orgs.each((_, org) => {
-        const serverID = $(org).data('serverID');
+        const serverID = $(org).data('server-id');
         const orgID = $(org).data('id');
         serverID in routesOrgsData ? '' : routesOrgsData[serverID] = {entities: []};
         routesOrgsData[serverID]['entities'].push({entity_type: 'organization', entity_id: orgID});

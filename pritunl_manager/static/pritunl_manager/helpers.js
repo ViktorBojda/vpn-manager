@@ -34,7 +34,7 @@ function parseEvents(events) {
         console.log(event);
         switch (event.type) {
             case "servers_updated": // server => [create, update, delete, start, stop, restart], org => [attach, detach, delete], user => [create]
-                ifExistsCall('fetchAllData');
+                ifExistsCall('rebuildServers');
                 break;
 
             case "organizations_updated": // org => [create, update, delete], user => [create, delete]
@@ -48,7 +48,6 @@ function parseEvents(events) {
 
             case "server_organizations_updated": // org => [attach, detach, delete]
                 ifExistsCall('rebuildAttachedOrgsByServerID', event.resource_id);
-                ifExistsCall('fetchOrgs');
                 break;
 
             case "users_updated": // user => [create, update, delete], org => [attach, detach], server => [update, start, restart, stop]
@@ -83,7 +82,7 @@ function parseFormData() {
     return data;
 }
 
-function rebuildElements({apiData, prefix, contSelector, template, callbacks = []}) {
+function rebuildElements({apiData, prefix, contSelector, template, callbacks = [], onCreateCallback = null}) {
     const container = $(contSelector);
     
     // Check if the existing element's ID is in the array of element data, if not remove it
@@ -102,6 +101,7 @@ function rebuildElements({apiData, prefix, contSelector, template, callbacks = [
             $.each(data, (key, value) => elm.find(`.${prefix}-data-${key}`).text(value == null ? '' : value));
         else {
             elm = $(template(data));
+            onCreateCallback ? onCreateCallback(elm) : '';
             container.append(elm);
         }
 
@@ -137,8 +137,8 @@ function insertEditModal(elmData, prefix, clickSuffix, editModal, parentPrefix =
     });
 }
 
-function startTimer(selector, elapsedSeconds) {
-    let elm = $(selector);
+function startTimer(elm, elapsedSeconds) {
+    elm = $(elm);
     if (!elm.length)
         return;
 
@@ -158,8 +158,8 @@ function startTimer(selector, elapsedSeconds) {
     }, 1000));
 }
 
-function stopTimer(selector) {
-    let elm = $(selector);
+function stopTimer(elm) {
+    elm = $(elm);
     if (!elm.length || elm.data('timer') === undefined)
         return;
 
@@ -173,7 +173,7 @@ function insertIDsIntoCheckboxes(elmData, prefix, parentPrefix = null, parentKey
     elmData.forEach(data => {
         if (parentPrefix)
             $(`#${parentPrefix}-${data[parentKey]} #${prefix}-${data.id} .${prefix}-check`)
-            .data(`${parentPrefix}ID`, data[parentKey]).data('id', data.id);
+            .data(`${parentPrefix}-id`, data[parentKey]).data('id', data.id);
         else
             $(`#${prefix}-${data.id} .${prefix}-check`).data('id', data.id)
     });
