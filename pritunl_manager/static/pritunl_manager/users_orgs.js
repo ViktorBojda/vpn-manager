@@ -1,4 +1,3 @@
-const urlBase = "/pritunl/api/";
 const orgTemplate = (orgData) =>
     `<div id=org-${orgData.id} class='card my-3 org-wrapper'>
         <div class='card-header row mx-0 px-0 align-items-center'>

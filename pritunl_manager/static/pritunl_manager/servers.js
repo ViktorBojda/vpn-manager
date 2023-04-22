@@ -1,4 +1,3 @@
-const urlBase = "/pritunl/api/";
 const serverTemplate = (serverData) =>
     `<div id=server-${serverData.id} class='card my-3 server-wrapper'>
         <div class='card-header row mx-0 px-0 align-items-center'>
