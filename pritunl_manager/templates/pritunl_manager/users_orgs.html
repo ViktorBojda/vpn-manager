@@ -2,11 +2,13 @@
 {% load static %}
 
 {% block content %}
-<h1>Users and Organizations</h1>
+<header>
+    <h1>Users and Organizations{% if is_readonly %}<span class="ms-2 fs-5"> (Read Only)</span>{% endif %}</h1>
+</header>
 
 <div class="row row-gap-2">
     <div class="col-12 col-sm-6 col-md-3">
-        <button type="button" id="btn-add-org" class="btn btn-primary w-100">Add Organization</button>
+        <button type="button" id="btn-add-org" class="btn btn-primary w-100" disabled>Add Organization</button>
     </div>
     <div class="col-12 col-sm-6 col-md-3">
         <button type="button" id="btn-add-user" class="btn btn-primary w-100" disabled>Add User</button>

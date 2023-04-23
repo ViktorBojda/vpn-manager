@@ -48,8 +48,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "pritunl_manager.exceptions.pritunl_exception_handler",
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
@@ -149,8 +149,8 @@ APPEND_SLASH = True
 
 AUTH_USER_MODEL = "accounts.User"
 
-CSRF_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SAMESITE = "Strict"
+SESSION_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
 SESSION_COOKIE_HTTPONLY = True
 

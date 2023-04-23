@@ -1,22 +1,3 @@
-function listenForEvents(id = '') {
-    $.ajax({
-        url: urlBase + "events/",
-        type: "GET",
-        data: `id=${id}`
-    })
-    .done(function (data) {
-        const lastEventID = parseEvents(data);
-        if (lastEventID)
-            id = lastEventID;
-    })
-    .fail(function (xhr, status, error) {
-        console.log("error: " + error);
-    })
-    .always(function () {
-        listenForEvents(id);
-    });
-}
-
 function ifExistsCall(funcName, param = null) {
     if (typeof window[funcName] === 'function') {
         if (param)
@@ -82,7 +63,7 @@ function parseFormData() {
     return data;
 }
 
-function rebuildElements({apiData, prefix, contSelector, template, callbacks = [], onCreateCallback = null}) {
+function rebuildElements({apiData, prefix, contSelector, template, onCreateCallback = null, callbacks = []}) {
     const container = $(contSelector);
     
     // Check if the existing element's ID is in the array of element data, if not remove it
@@ -122,6 +103,9 @@ function rebuildElements({apiData, prefix, contSelector, template, callbacks = [
                 callback();
         }
     });
+
+    if (isReadOnly)
+        makePageReadOnly();
 }
 
 function insertEditModal(elmData, prefix, clickSuffix, editModal, parentPrefix = null, parentKey = null) {
@@ -177,4 +161,14 @@ function insertIDsIntoCheckboxes(elmData, prefix, parentPrefix = null, parentKey
         else
             $(`#${prefix}-${data.id} .${prefix}-check`).data('id', data.id)
     });
+}
+
+function showFormSpinner() {
+    $('#modal-footer .spinner-border').removeClass('d-none');
+    $('#modal-footer :button').prop("disabled", true);
+}
+
+function hideFormSpinner() {
+    $('#modal-footer .spinner-border').addClass('d-none');
+    $('#modal-footer :button').prop("disabled", false);
 }

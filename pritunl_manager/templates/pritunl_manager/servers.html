@@ -2,20 +2,22 @@
 {% load static %}
 
 {% block content %}
-<h1>Servers</h1>
+<header>
+    <h1>Servers{% if is_readonly %}<span class="ms-2 fs-5"> (Read Only)</span>{% endif %}</h1>
+</header>
 
 <div class="row row-gap-2">
     <div class="col-12 col-sm-6 col-lg">
-        <button type="button" id="btn-add-server" class="btn btn-primary w-100">Add Server</button>
+        <button type="button" id="btn-add-server" class="btn btn-primary w-100" disabled>Add Server</button>
     </div>
     <div class="col-12 col-sm-6 col-lg">
-        <button type="button" id="btn-attach-org" class="btn btn-primary w-100">Attach Organization</button>
+        <button type="button" id="btn-attach-org" class="btn btn-primary w-100" disabled>Attach Organization</button>
     </div>
     <div class="col-12 col-sm-4 col-lg">
-        <button type="button" id="btn-add-route" class="btn btn-primary w-100">Add Route</button>
+        <button type="button" id="btn-add-route" class="btn btn-primary w-100" disabled>Add Route</button>
     </div>
     <div class="col-12 col-sm-4 col-lg">
-        <button type="button" id="btn-bulk-add-routes" class="btn btn-primary w-100">Bulk Add Route</button>
+        <button type="button" id="btn-bulk-add-routes" class="btn btn-primary w-100" disabled>Bulk Add Route</button>
     </div>
     <div class="col-12 col-sm-4 col-lg">
         <button type="button" id="btn-del-select" class="btn btn-danger w-100" disabled>Delete Selected</button>

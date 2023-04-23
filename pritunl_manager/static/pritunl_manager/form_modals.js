@@ -32,7 +32,8 @@ function showBulkAddUsersModal(orgData) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">Add</button>`
     )
 
@@ -107,7 +108,8 @@ function showAddEditUserModal(action, data) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">${(action === 'edit') ? "Edit" : "Add"}</button>`
     )
 
@@ -149,7 +151,8 @@ function showAddEditOrgModal(action, data = null) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">${(action === 'edit') ? "Edit" : "Add"}</button>`
     )
 
@@ -178,7 +181,8 @@ function showDeleteUsersOrgsModal() {
         ${$itemList.prop("outerHTML")}`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" id="modal-btn-del"class="btn btn-danger">Delete</button>`
     )
 
@@ -270,7 +274,8 @@ function showAddEditServerModal(action, data = null) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" class="btn btn-primary">Submit</button>`
     )
 
@@ -352,7 +357,8 @@ function showAddEditRouteModal(action, data) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" id="form-submit-btn" form="form" class="btn btn-primary">${(action === 'edit') ? 'Edit' : 'Add'}</button>`
     )
     $("#form").off('input').on('input', () => checkIfEmpty($('#form [required]')));
@@ -395,7 +401,8 @@ function showBulkAddRoutesModal(serverData) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" id="form-submit-btn" class="btn btn-primary">Add</button>`
     )
 
@@ -440,7 +447,8 @@ function showAttachOrgModal(orgData, serverData) {
         </form>`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" form="form" class="btn btn-primary">Attach</button>`
     )
 
@@ -481,7 +489,8 @@ function showDeleteServersModal() {
         ${itemList.prop("outerHTML")}`
     )
     $("#modal-footer").html(
-        `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
     )
 

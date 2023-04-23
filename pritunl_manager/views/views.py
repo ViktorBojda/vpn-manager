@@ -6,11 +6,11 @@ class UsersOrganizationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return render(request, "pritunl_manager/users_orgs.html")
+        return render(request, "pritunl_manager/users_orgs.html", {"is_readonly": not request.user.is_staff})
 
 
 class ServersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return render(request, "pritunl_manager/servers.html")
+        return render(request, "pritunl_manager/servers.html", {"is_readonly": not request.user.is_staff})

@@ -19,6 +19,12 @@ const userTemplate = (userData) =>
             <button type="button" class="btn btn-primary user-links-btn ms-1">Links</button>
         </div>
     </li>`;
+let isReadOnly = true;
+
+function makePageReadOnly() {
+    $("#main-container :checkbox, #main-container :button").prop("disabled", true);
+    $("#main-container .clickable").off();
+}
 
 function searchOrgsOrUsers(value) {
     const selected = $('#select-search').val();
@@ -43,6 +49,7 @@ function searchOrgsOrUsers(value) {
 }
 
 function deleteSelected(orgs, users) {
+    showFormSpinner();
     const ajaxCalls = [];
     orgs.each((_, org) => ajaxCalls.push(deleteOrgApi({orgID: $(org).data('id')})));
     users.each((_, user) => ajaxCalls.push(deleteUserApi({orgID: $(user).data('org-id'), userID: $(user).data('id')})));
@@ -55,7 +62,9 @@ function addOrg() {
     const data = parseFormData();
     createOrgApi({
         data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -63,7 +72,9 @@ function editOrg() {
     const data = parseFormData();
     updateOrgApi({
         orgID: data.id, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -84,7 +95,9 @@ function bulkAddUsers() {
     }
     bulkCreateUsersApi({
         orgID: data.organization, data: {'user_list': userList},
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -94,7 +107,9 @@ function addUser() {
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     createUserApi({
         orgID: data.organization, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -104,7 +119,9 @@ function editUser() {
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateUserApi({
         orgID: data.organization, userID: data.id, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -188,6 +205,8 @@ $(document).on("change", ".org-check", function () {
 $(document).on("change", "input[name='checkbox']", checkForCheckBoxes);
 
 $(function () {
+    isReadOnly = JSON.parse(document.getElementById('is-readonly').textContent);
+    isReadOnly ? '' : $("#btn-add-org").prop('disabled', false);
     rebuildAllData();
     listenForEvents();
 });

@@ -6,6 +6,7 @@ const serverTemplate = (serverData) =>
                 <span class="fw-medium clickable server-data-name">${serverData.name}</span>
             </div>
             <div class="col d-flex column-gap-3 justify-content-end">
+                <span class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></span>
                 <button type="button" disabled class="btn btn-success server-start-btn" onclick="controlServer('${serverData.id}', 'start')">Start Server</button>
                 <button type="button" class="btn btn-primary server-restart-btn" onclick="controlServer('${serverData.id}', 'restart')">Restart Server</button>
                 <button type="button" class="btn btn-warning server-stop-btn" onclick="controlServer('${serverData.id}', 'stop')">Stop Server</button>
@@ -39,8 +40,15 @@ const orgTemplate = (orgData) =>
         <span class="pe-3 me-3 border-end"><input class="form-check-input org-check" type="checkbox" name="checkbox" aria-label="Select checkbox"></span>
         <span class="px-0 fw-medium org-data-name">${orgData.name}</span>
     </li>`;
+let isReadOnly = true;
+
+function makePageReadOnly() {
+    $("#main-container :checkbox, #main-container :button").prop("disabled", true);
+    $("#main-container .clickable").off();
+}
 
 function deleteSelected(servers, routesOrgs) {
+    showFormSpinner()
     const ajaxCalls = [];
     servers.each((_, server) => ajaxCalls.push(deleteServerApi({serverID: $(server).data('id')})));
     $.each(routesOrgs, (key, value) => ajaxCalls.push(deleteRoutesAndOrgsApi({serverID: key, data: value})));
@@ -53,7 +61,9 @@ function attachOrg() {
     const data = parseFormData();
     attachOrgApi({
         serverID: data.server, orgID: data.organization,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -61,7 +71,9 @@ function addRoute() {
     const data = parseFormData();
     createRouteApi({
         serverID: data.server, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -82,7 +94,9 @@ function bulkAddRoutes() {
     }
     bulkCreateRoutesApi({
         serverID: data.server, data: {'route_list': routeList},
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -90,7 +104,9 @@ function editRoute() {
     const data = parseFormData();
     updateRouteApi({
         serverID: data.server, routeID: data.id, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -100,7 +116,9 @@ function addServer() {
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     createServerApi({
         data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -110,7 +128,9 @@ function editServer() {
         data.groups = data.groups.split(/[ ,]+/).map(item => item.trim());
     updateServerApi({
         serverID: data.id, data: data,
-        doneCallbacks: [{func: () => $("#modal").modal("hide")}]
+        doneCallbacks: [{func: () => $("#modal").modal("hide")}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        beforeSendCallback: () => showFormSpinner()
     });
 }
 
@@ -123,7 +143,7 @@ function rebuildAttachedOrgsByServerID(serverID) {
                     const serverWrapper = $(`#server-${serverID}`);
                     serverWrapper.data('org-count', apiData.length);
                     const startBtn = serverWrapper.find('.server-start-btn');
-                    apiData.length ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
+                    (apiData.length && !isReadOnly) ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
                 }
             },
             {
@@ -167,8 +187,14 @@ function controlServer(serverID, action) {
         console.error('Invalid action: ' + action);
         return;
     }
-    $(`#server-${serverID} .server-${action}-btn`).prop('disabled', true);
-    controlServerApi({serverID: serverID, action: action});
+    const serverWrapper = $(`#server-${serverID}`);
+    serverWrapper.find(`.server-${action}-btn`).prop('disabled', true);
+    controlServerApi({
+        serverID: serverID, action: action,
+        beforeSendCallback: () => serverWrapper.find('.spinner-border').removeClass('d-none'),
+        doneCallbacks: [{func: () => serverWrapper.find('.spinner-border').addClass('d-none')}],
+        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+    });
 }
 
 function refreshAttachOrgModal(onlyServers = false) {
@@ -184,7 +210,7 @@ function refreshAttachOrgModal(onlyServers = false) {
         doneCallbacks: [{
             func: ({apiData, serverData}) => {
                 const btnAttachOrg = $('#btn-attach-org');
-                (apiData && serverData) ?  
+                (apiData && serverData && !isReadOnly) ?  
                 btnAttachOrg.prop('disabled', false).off('click').on('click', () => showAttachOrgModal(apiData, serverData)) :
                 btnAttachOrg.prop('disabled', true)
                 $('#servers-container').data('org-data', apiData);
@@ -226,7 +252,7 @@ function configureServerControlBtns(serverData) {
         else {
             stopTimer(serverWrapper.find('.server-uptime'));
             startBtn.show();
-            serverWrapper.data('org-count') ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true)
+            serverWrapper.data('org-count') ? '' : startBtn.prop('disabled', true)
             restartBtn.hide();
             stopBtn.hide();
         }
@@ -239,11 +265,11 @@ function rebuildServers() {
             func: rebuildElements,
             args: {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
+                onCreateCallback: (elm) => $(elm).data('org-count', 0),
                 callbacks: [
                     [insertIDsIntoCheckboxes, 'server'], configureNavbarBtns, configureServerControlBtns,
                     [insertEditModal, 'server', 'name', showAddEditServerModal], checkForCheckBoxes
-                ],
-                onCreateCallback: (elm) => $(elm).data('org-count', 0)
+                ]
             }
         }]
     });
@@ -272,6 +298,8 @@ $(document).on("change", ".server-check", function() {
 $(document).on("change", "input[name='checkbox']", checkForCheckBoxes);
 
 $(function() {
+    isReadOnly = JSON.parse(document.getElementById('is-readonly').textContent);
+    isReadOnly ? '' : $("#btn-add-server").prop('disabled', false);
     rebuildAllData();
     listenForEvents();
 });
