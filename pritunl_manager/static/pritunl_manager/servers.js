@@ -225,13 +225,19 @@ function configureNavbarBtns(serverData) {
         $('#btn-add-route').prop('disabled', true);
         $('#btn-bulk-add-routes').prop('disabled', true);
         console.log("No servers found, you must add server before you can add route!");
-        $('#btn-attach-org').prop('disabled', true);
+        $('#btn-attach-org').prop('disabled', true).data('refresh-orgs', true);
         console.log("No servers found, you must add server before you can attach organization!");
         return;
     }
     $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddEditRouteModal('add', serverData));
     $('#btn-bulk-add-routes').prop('disabled', false).off('click').on('click', () => showBulkAddRoutesModal(serverData));
     $('#servers-container').data('server-data', serverData);
+
+    if ($('#btn-attach-org').data('refresh-orgs')) {
+        $('#btn-attach-org').data('refresh-orgs', false);
+        refreshAttachOrgModal();
+        return;
+    }
 
     refreshAttachOrgModal(true);
 }
