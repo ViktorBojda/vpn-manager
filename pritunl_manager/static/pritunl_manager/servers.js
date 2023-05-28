@@ -88,7 +88,7 @@ function bulkAddRoutes() {
         
         const values = lines[i].split(",");
         const network = values[0].trim();
-        const comment = values[1] ? values[1].trim() : "";
+        const comment = values[1] ? values[1].trim() : null;
 
         routeList.push({ network: network, comment: comment });
     }
@@ -192,8 +192,8 @@ function controlServer(serverID, action) {
     controlServerApi({
         serverID: serverID, action: action,
         beforeSendCallback: () => serverWrapper.find('.spinner-border').removeClass('d-none'),
-        doneCallbacks: [{func: () => serverWrapper.find('.spinner-border').addClass('d-none')}],
-        alwaysCallbacks: [{func: () => hideFormSpinner()}],
+        failCallbacks: [{func: () => serverWrapper.find(`.server-${action}-btn`).prop('disabled', false)}],
+        alwaysCallbacks: [{func: () => serverWrapper.find('.spinner-border').addClass('d-none')}],
     });
 }
 
@@ -258,7 +258,7 @@ function configureServerControlBtns(serverData) {
         else {
             stopTimer(serverWrapper.find('.server-uptime'));
             startBtn.show();
-            serverWrapper.data('org-count') ? '' : startBtn.prop('disabled', true)
+            serverWrapper.data('org-count') ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true)
             restartBtn.hide();
             stopBtn.hide();
         }

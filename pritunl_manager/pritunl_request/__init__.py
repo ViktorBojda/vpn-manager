@@ -49,5 +49,5 @@ def auth_request(
             except json.JSONDecodeError:
                 raise PritunlAPIException(detail=response.text, status_code=response.status_code)
             else:
-                raise PritunlAPIException(err_dict['error_msg'], err_dict['error'], response.status_code)
+                raise PritunlAPIException(err_dict.get('error_msg', None), err_dict.get('error', None), response.status_code)
     return response

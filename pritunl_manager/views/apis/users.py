@@ -23,11 +23,7 @@ class UserCreateApi(APIView):
     """
     Creates new user for organization.
     """
-
-    # {'id':null,'organization':'6381f3eff5fffa5ebb491b59','organization_name':null,'name':'user3','email':'user3@email.com','groups':['group1'],
-    # 'last_active':null,'gravatar':null,'audit':null,'type':null,'auth_type':'local','yubico_id':'','status':null,'sso':null,'otp_auth':null,
-    # 'otp_secret':null,'servers':null,'disabled':null,'network_links':[],'dns_mapping':null,'bypass_secondary':false,'client_to_client':false,
-    # 'dns_servers':[],'dns_suffix':'','port_forwarding':[{'protocol':'tcp','port':'80','dport':'8000'}],'pin':'123456','mac_addresses':[]}
+    
     InputSerializer = UserSerializer
 
     def post(self, request, org_id) -> Response:

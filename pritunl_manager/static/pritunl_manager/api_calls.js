@@ -127,10 +127,10 @@ function deleteServerApi({serverID}) {
     return apiCall({path: `servers/${serverID}/delete/`, settings: createSettings('DELETE')});
 }
 
-function controlServerApi({serverID, action, doneCallbacks = [], alwaysCallbacks = [], beforeSendCallback = null}) {
+function controlServerApi({serverID, action, doneCallbacks = [], failCallbacks = [], alwaysCallbacks = [], beforeSendCallback = null}) {
     return apiCall({
-        path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'),
-        doneCallbacks: doneCallbacks, alwaysCallbacks: alwaysCallbacks, beforeSendCallback: beforeSendCallback
+        path: `servers/${serverID}/${action}/`, settings: createSettings('PUT'), doneCallbacks: doneCallbacks,
+        failCallbacks: failCallbacks, alwaysCallbacks: alwaysCallbacks, beforeSendCallback: beforeSendCallback
     });
 }
 

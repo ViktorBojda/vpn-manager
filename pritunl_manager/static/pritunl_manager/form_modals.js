@@ -316,7 +316,7 @@ function showAddEditRouteModal(action, data) {
         });
         serverDiv = $(
             `<div class="mb-3">
-                <label for="form-input-org" class="form-label">Select a server</label>
+                <label for="form-input-server" class="form-label">Select a server</label>
                 ${serverSelect.prop("outerHTML")}
             </div>`
         );
@@ -381,7 +381,7 @@ function showBulkAddRoutesModal(serverData) {
         $.each(serverData, function(_, val) {
             $('<option>').val(val.id).text(val.name).appendTo(serverSelect);
         });
-    const textareaPlaceholder = '10.12.32.0/24, comment 1\n192.168.200.0/24, comment 2\n . . .'
+    const textareaPlaceholder = 'example.com\n10.12.32.0/24, comment 1\n . . .'
 
     $("#modal-header").text("Bulk Add Routes");
     $("#modal-body").html(

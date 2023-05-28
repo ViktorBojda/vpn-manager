@@ -10,7 +10,6 @@ from rest_framework.serializers import (
 from pritunl_manager.selectors.routes import get_all_routes, get_route_by_id
 from pritunl_manager.serializers import RouteSerializer
 from pritunl_manager.services.routes import bulk_create_route, create_route, delete_route, update_route
-from pritunl_manager.validators import validate_ipv4_private_network_address
 
 
 class RouteCreateApi(APIView):

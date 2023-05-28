@@ -10,8 +10,12 @@ from pritunl_manager.selectors.routes import get_route_by_id
 def create_route(*, server_id: str, **kwargs) -> Dict:
     was_online = servers.stop_server_if_online_and_verify(server_id)
     network = kwargs.get("network", None)
+    kwargs["nat"] = True
     if network and is_dns_name(network):
         kwargs["network"] = socket.gethostbyname(network)
+        comment = kwargs.get("comment", None)
+        if comment is None:
+            kwargs["comment"] = network
 
     response = auth_request(
         method="POST",
@@ -58,8 +62,15 @@ def bulk_create_route(
     was_online = servers.stop_server_if_online_and_verify(server_id)
     for route in route_list:
         network = route.get("network", None)
+        route["nat"] = True # type: ignore
         if network and is_dns_name(network):
             route["network"] = socket.gethostbyname(network)
+            comment = route.get("comment", None)
+            print("###################")
+            print(comment)
+            print("###################")
+            if comment is None:
+                route["comment"] = network
 
     response = auth_request(
         method="POST",
