@@ -129,10 +129,11 @@ function configureNavbarBtns(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
         $('#btn-bulk-add-users').prop('disabled', true);
-        console.log("No organizations found, you must add organization before you can add user!");
+        $('#no-orgs-info').removeClass('d-none');
         $('#btn-del-select').prop('disabled', true);
         return;
     }
+    $('#no-orgs-info').addClass('d-none');
     $('#btn-add-user').prop('disabled', false).off('click').on('click', () => showAddEditUserModal('add', orgData));
     $('#btn-bulk-add-users').prop('disabled', false).off('click').on('click', () => showBulkAddUsersModal(orgData));
 }

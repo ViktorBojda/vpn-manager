@@ -224,11 +224,11 @@ function configureNavbarBtns(serverData) {
     if (serverData.length == 0) {
         $('#btn-add-route').prop('disabled', true);
         $('#btn-bulk-add-routes').prop('disabled', true);
-        console.log("No servers found, you must add server before you can add route!");
+        $('#no-servers-info').removeClass('d-none');
         $('#btn-attach-org').prop('disabled', true).data('refresh-orgs', true);
-        console.log("No servers found, you must add server before you can attach organization!");
         return;
     }
+    $('#no-servers-info').addClass('d-none');
     $('#btn-add-route').prop('disabled', false).off('click').on('click', () => showAddEditRouteModal('add', serverData));
     $('#btn-bulk-add-routes').prop('disabled', false).off('click').on('click', () => showBulkAddRoutesModal(serverData));
     $('#servers-container').data('server-data', serverData);

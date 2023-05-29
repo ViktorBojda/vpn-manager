@@ -66,13 +66,14 @@ function parseFormData() {
 function rebuildElements({apiData, prefix, contSelector, template, onCreateCallback = null, callbacks = []}) {
     const container = $(contSelector);
     
-    // Check if the existing element's ID is in the array of element data, if not remove it
+    // Check if the existing element's ID is in the array of element data and if it has class 'dont-destroy', if not remove it
     container.children().filter(function() {
         const childId = $(this).attr('id');
         const hasId = apiData.some(function(data) {
             return `${prefix}-${data.id}` == childId;
         });
-        return !hasId;
+        const hasDontDestroy = $(this).hasClass('dont-destroy');
+        return !hasId && !hasDontDestroy;
     }).remove();
     
     // Check whether element exists, if it does update it, if not create new one

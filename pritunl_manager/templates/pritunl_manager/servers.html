@@ -24,7 +24,13 @@
     </div>
 </div>
 
-<div id="servers-container" class="d-flex flex-column"></div>
+<div id="servers-container" class="d-flex flex-column">
+    <div id="no-servers-info" class='card my-3 dont-destroy d-none'>
+        <div class='card-header'>
+            <p class="text-center mb-0">There are no servers.</p>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block js_scripts %}
