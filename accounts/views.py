@@ -21,7 +21,7 @@ class UserLoginView(APIView):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect("pritunl_manager:users-organizations-view")
+            return redirect(request.query_params.get("next", "pritunl_manager:users-organizations-view"))
         return render(request, "accounts/login.html")
 
     def post(self, request):
@@ -31,7 +31,7 @@ class UserLoginView(APIView):
         user = authenticate(**serializer.data)
         if user is not None:
             login(request, user)
-            return redirect("pritunl_manager:users-organizations-view")
+            return redirect(request.query_params.get("next", "pritunl_manager:users-organizations-view"))
         
         messages.error(request, 'Invalid username or password', "alert-danger")
         return render(request, "accounts/login.html")

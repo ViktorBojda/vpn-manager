@@ -1,4 +1,4 @@
-const urlBase = "/pritunl/api/";
+const urlBase = "/api/";
 const csrftoken = getCookie('csrftoken');
 const createSettings = (method, data = null) => {
     const settings = {type: method, contentType: 'application/json', headers: {'X-CSRFToken': csrftoken}};

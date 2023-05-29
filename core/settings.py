@@ -149,6 +149,8 @@ APPEND_SLASH = True
 
 AUTH_USER_MODEL = "accounts.User"
 
+LOGIN_URL = "login-view"
+
 CSRF_COOKIE_SAMESITE = "Strict"
 SESSION_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies

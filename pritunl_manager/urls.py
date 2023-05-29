@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.urls import include, path
 
 from pritunl_manager import views
@@ -167,6 +168,7 @@ api_patterns = [
 
 app_name = "pritunl_manager"
 urlpatterns = [
+    path("", lambda request: redirect('users/', permanent=True)),
     path(
         "users/",
         views.UsersOrganizationsView.as_view(),
