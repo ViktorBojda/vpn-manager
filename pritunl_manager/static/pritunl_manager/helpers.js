@@ -8,11 +8,9 @@ function ifExistsCall(funcName, param = null) {
 }
 
 function parseEvents(events) {
-    console.log('#####################');
     let lastEventID = null;
     events.forEach(event => {
         lastEventID = event.id;
-        console.log(event);
         switch (event.type) {
             case "servers_updated": // server => [create, update, delete, start, stop, restart], org => [attach, detach, delete], user => [create]
                 ifExistsCall('rebuildServers');

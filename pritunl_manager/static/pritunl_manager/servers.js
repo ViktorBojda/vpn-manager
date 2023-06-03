@@ -27,7 +27,11 @@ const serverTemplate = (serverData) =>
             </li>
         </ul>
         <ul class='list-group list-group-flush my-2 route-list'></ul>
-        <ul class='list-group list-group-flush org-list'></ul>
+        <ul class='list-group list-group-flush org-list'>
+            <li class="list-group-item border-top border-bottom row mx-0 px-0 align-items-center text-center d-none no-attached-orgs-info dont-destroy">
+                There are no organizations attached to this server.
+            </li>
+        </ul>
     </div>`;
 const routeTemplate = (routeData) => 
     `<li id="route-${routeData.id}" class="list-group-item border-top border-bottom row mx-0 px-0 align-items-center route-item">
@@ -143,7 +147,14 @@ function rebuildAttachedOrgsByServerID(serverID) {
                     const serverWrapper = $(`#server-${serverID}`);
                     serverWrapper.data('org-count', apiData.length);
                     const startBtn = serverWrapper.find('.server-start-btn');
-                    (apiData.length && !isReadOnly) ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true);
+                    if (apiData.length) {
+                        serverWrapper.find('.no-attached-orgs-info').addClass('d-none');
+                        isReadOnly ? startBtn.prop('disabled', true) : startBtn.prop('disabled', false);
+                    }
+                    else {
+                        serverWrapper.find('.no-attached-orgs-info').removeClass('d-none');
+                        startBtn.prop('disabled', true)
+                    }
                 }
             },
             {
@@ -220,7 +231,7 @@ function refreshAttachOrgModal(onlyServers = false) {
     });
 }
 
-function configureNavbarBtns(serverData) {
+function configureMenuBtns(serverData) {
     if (serverData.length == 0) {
         $('#btn-add-route').prop('disabled', true);
         $('#btn-bulk-add-routes').prop('disabled', true);
@@ -259,6 +270,14 @@ function configureServerControlBtns(serverData) {
             stopTimer(serverWrapper.find('.server-uptime'));
             startBtn.show();
             serverWrapper.data('org-count') ? startBtn.prop('disabled', false) : startBtn.prop('disabled', true)
+            if (serverWrapper.data('org-count')) {
+                startBtn.prop('disabled', false);
+                serverWrapper.find('.no-attached-orgs-info').addClass('d-none');
+            }
+            else {
+                startBtn.prop('disabled', true);
+                serverWrapper.find('.no-attached-orgs-info').removeClass('d-none');
+            }
             restartBtn.hide();
             stopBtn.hide();
         }
@@ -273,7 +292,7 @@ function rebuildServers() {
                 prefix: 'server', contSelector: '#servers-container', template: serverTemplate,
                 onCreateCallback: (elm) => $(elm).data('org-count', 0),
                 callbacks: [
-                    [insertIDsIntoCheckboxes, 'server'], configureNavbarBtns, configureServerControlBtns,
+                    [insertIDsIntoCheckboxes, 'server'], configureMenuBtns, configureServerControlBtns,
                     [insertEditModal, 'server', 'name', showAddEditServerModal], checkForCheckBoxes
                 ]
             }

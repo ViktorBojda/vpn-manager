@@ -53,9 +53,16 @@ function deleteSelected(orgs, users) {
     const ajaxCalls = [];
     orgs.each((_, org) => ajaxCalls.push(deleteOrgApi({orgID: $(org).data('id')})));
     users.each((_, user) => ajaxCalls.push(deleteUserApi({orgID: $(user).data('org-id'), userID: $(user).data('id')})));
-    $.when.apply($, ajaxCalls).then(function() {
-        $("#modal").modal("hide");
-    })
+    $.when.apply($, ajaxCalls).then(
+        function() {
+            $("#modal").modal("hide");
+            hideFormSpinner();
+        },
+        function() {
+            $("#modal").modal("hide");
+            hideFormSpinner();
+        }
+    )
 }
 
 function addOrg() {
@@ -125,7 +132,7 @@ function editUser() {
     });
 }
 
-function configureNavbarBtns(orgData) {
+function configureMenuBtns(orgData) {
     if (orgData.length == 0) {
         $('#btn-add-user').prop('disabled', true);
         $('#btn-bulk-add-users').prop('disabled', true);
@@ -176,7 +183,7 @@ function rebuildOrgs() {
             args: {
                 prefix: 'org', contSelector: '#orgs-container', template: orgTemplate, 
                 callbacks: [
-                    configureNavbarBtns, [insertIDsIntoCheckboxes, 'org'],
+                    configureMenuBtns, [insertIDsIntoCheckboxes, 'org'],
                     [insertEditModal, 'org', 'name', showAddEditOrgModal], checkForCheckBoxes
                 ]
             }

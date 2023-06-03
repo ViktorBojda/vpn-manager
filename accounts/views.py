@@ -42,6 +42,9 @@ class UserLogoutView(APIView):
     Logs user out and redirects to login page
     """
     permission_classes = [AllowAny]
+
+    def get(self, request):
+        return redirect("login-view")
     
     def post(self, request):
         logout(request)
