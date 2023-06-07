@@ -491,7 +491,7 @@ function showDeleteServersModal() {
     $("#modal-footer").html(
         `<div class="spinner-border ms-auto d-none" role="status" aria-hidden="true"></div>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" id="modal-btn-del"class="btn btn-primary">Delete</button>`
+        <button type="button" id="modal-btn-del"class="btn btn-danger">Delete</button>`
     )
 
     $("#modal-btn-del").off('click').on("click", () => deleteSelected(servers, routesOrgsData));

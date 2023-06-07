@@ -66,9 +66,6 @@ def bulk_create_route(
         if network and is_dns_name(network):
             route["network"] = socket.gethostbyname(network)
             comment = route.get("comment", None)
-            print("###################")
-            print(comment)
-            print("###################")
             if comment is None:
                 route["comment"] = network
 

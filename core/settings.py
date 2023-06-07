@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import sys
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +25,10 @@ SECRET_KEY = config("SECRET_KEY")
 BASE_URL = config("BASE_URL")
 API_TOKEN = config("API_TOKEN")
 API_SECRET = config("API_SECRET")
-MONGODB_PASS = config("MONGODB_PASS")
+MONGODB_URI = config("MONGODB_URI")
+
+if not SECRET_KEY or not BASE_URL or not API_TOKEN or not API_SECRET or not MONGODB_URI:
+    sys.exit("Missing critical .env values. Please check the .env file.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -98,7 +102,7 @@ DATABASES = {
         "ENGINE": "djongo",
         "NAME": "Pritunl",
         "CLIENT": {
-            "host": f"mongodb+srv://ViktorBojda:{MONGODB_PASS}@pritunl.myfvnod.mongodb.net/Pritunl?retryWrites=true&w=majority"
+            "host": MONGODB_URI
         },
     }
 }
